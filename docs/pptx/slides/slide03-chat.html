@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+.header {
+  background: #ffffff;
+  padding: 24pt 40pt;
+  border-bottom: 2pt solid #e5e7eb;
+}
+.accent-bar { width: 40pt; height: 3pt; background: #7c6aef; margin-bottom: 8pt; border-radius: 2pt; }
+.content {
+  flex: 1; display: flex; padding: 16pt 40pt; gap: 16pt;
+}
+.col { width: 50%; display: flex; flex-direction: column; gap: 10pt; }
+.feature-card {
+  background: #ffffff; border-radius: 10pt; padding: 14pt 16pt;
+  border: 1pt solid #e5e7eb; flex: 1;
+}
+.feature-title {
+  color: #7c3aed; font-size: 12pt; font-weight: 700; margin: 0 0 6pt 0;
+}
+.feature-desc {
+  color: #333; font-size: 11pt; margin: 0; line-height: 1.5;
+}
+.code-block {
+  background: #1e1e2e; border-radius: 6pt; padding: 8pt 10pt; margin-top: 6pt;
+}
+.code-text {
+  color: #a6e3a1; font-size: 9pt; font-family: Courier New, monospace; margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="accent-bar"></div>
+  <h2 style="color: #1a1a2e; font-size: 22pt; margin: 0;">AI 核心对话能力</h2>
+</div>
+<div class="content">
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">智能对话 + SSE 流式输出</p>
+      <p class="feature-desc">支持 DeepSeek / 通义千问等多模型切换，通过 fetch + ReadableStream 实现 POST SSE 流式通信，逐字打字效果。</p>
+      <div class="code-block">
+        <p class="code-text">POST /chat/stream → text/event-stream</p>
+        <p class="code-text">data: {"token":"你","done":false}</p>
+        <p class="code-text">data: {"done":true}</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">角色人设系统</p>
+      <p class="feature-desc">20+ 预设角色，每个角色独立 system prompt。对话时自动注入角色指令，实现风格化回复。</p>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">深度思考模式</p>
+      <p class="feature-desc">两阶段思考链：先输出「深度思考分析」，再输出「最终答案」。前端动态渲染思考过程。</p>
+    </div>
+  </div>
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">联网搜索</p>
+      <p class="feature-desc">基于百度搜索的实时信息检索，搜索结果注入 LLM 上下文。回答附带「已联网检索」标记。</p>
+      <div class="code-block">
+        <p class="code-text">WebSearchService.search(query)</p>
+        <p class="code-text">→ 百度搜索 → 解析结果</p>
+        <p class="code-text">→ 注入 system 消息 → LLM 回答</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">RAG 知识库</p>
+      <p class="feature-desc">上传文档 → ChromaDB 向量检索 → 聊天时自动引用。支持多文档管理，语义搜索 top-5 相关片段。</p>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">LangChain 多级记忆</p>
+      <p class="feature-desc">支持内存 / Redis / PostgreSQL 三种记忆方案，通过环境变量切换。消息双写策略保证数据一致。</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

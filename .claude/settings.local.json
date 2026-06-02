@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Stop-Process -Id 36440 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(npx expo *)",
+      "Bash(powershell -Command \"cd 'C:\\\\Users\\\\86195\\\\OneDrive\\\\桌面\\\\YuanBaoAI\\\\nest-backend'; node check-templates.js\")",
+      "PowerShell(Start-Sleep -Seconds 8; Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object {$_.CommandLine -match \"nest|expo\"} | Select-Object ProcessId, CommandLine | Format-Table -Wrap)",
+      "PowerShell(Start-Sleep -Seconds 10; Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object {$_.CommandLine -match \"expo\"} | Select-Object ProcessId, CommandLine | Format-Table -Wrap)",
+      "Bash(Get-Process -Name node -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Id, ProcessName, CommandLine)",
+      "Bash(Stop-Process -Id 36240 -Force)",
+      "PowerShell(Stop-Process -Id 36240 -Force)",
+      "Bash(Select-String \":3000\")",
+      "PowerShell(Stop-Process -Id 34396 -Force)",
+      "PowerShell(Stop-Process -Id 54748 -Force)",
+      "PowerShell(Stop-Process -Id 35452 -Force)",
+      "Bash(curl -s http://localhost:3000/create/cos/heroes)",
+      "Bash(dir \"c:\\\\Users\\\\86195\\\\OneDrive\\\\桌面\\\\YuanBaoAI\\\\nest-backend\\\\uploads\\\\cos_hero_\"*.png)",
+      "Bash(python app.py)",
+      "Bash(pip install *)"
+    ]
+  }
+}

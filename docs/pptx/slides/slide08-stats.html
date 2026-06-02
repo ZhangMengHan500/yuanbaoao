@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+.header {
+  background: #ffffff;
+  padding: 24pt 40pt;
+  border-bottom: 2pt solid #e5e7eb;
+}
+.accent-bar { width: 40pt; height: 3pt; background: #7c6aef; margin-bottom: 8pt; border-radius: 2pt; }
+.content {
+  flex: 1; display: flex; flex-direction: column; padding: 20pt 40pt; gap: 16pt;
+}
+.stats-row {
+  display: flex; gap: 16pt;
+}
+.stat-card {
+  flex: 1; background: #ffffff; border-radius: 12pt; padding: 20pt;
+  border: 1pt solid #e5e7eb; text-align: center;
+}
+.stat-num {
+  font-size: 32pt; font-weight: 800; color: #7c6aef; margin: 0;
+}
+.stat-label {
+  font-size: 12pt; color: #666; margin: 6pt 0 0 0; font-weight: 500;
+}
+.detail-row {
+  display: flex; gap: 16pt;
+}
+.detail-card {
+  flex: 1; background: #ffffff; border-radius: 10pt; padding: 16pt;
+  border: 1pt solid #e5e7eb;
+}
+.detail-title {
+  color: #7c3aed; font-size: 12pt; font-weight: 700; margin: 0 0 8pt 0;
+}
+.detail-item {
+  color: #333; font-size: 11pt; margin: 0 0 4pt 0; line-height: 1.4;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="accent-bar"></div>
+  <h2 style="color: #1a1a2e; font-size: 22pt; margin: 0;">功能数据统计</h2>
+</div>
+<div class="content">
+  <div class="stats-row">
+    <div class="stat-card">
+      <p class="stat-num">25</p>
+      <p class="stat-label">前端页面</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-num">22</p>
+      <p class="stat-label">后端模块</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-num">14</p>
+      <p class="stat-label">功能入口</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-num">60+</p>
+      <p class="stat-label">API 端点</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-num">4</p>
+      <p class="stat-label">AI 模型</p>
+    </div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-card">
+      <p class="detail-title">功能分类</p>
+      <p class="detail-item">AI 对话：智能对话、角色人设、深度思考、联网搜索、知识库</p>
+      <p class="detail-item">图像创作：AI 生图、智能 P 图、王者 COS、图生图</p>
+      <p class="detail-item">教育工具：拍题答疑、作业批改、AI 出卷、文档阅读</p>
+      <p class="detail-item">多媒体：录音笔、语音通话、视频生成、语音输入</p>
+      <p class="detail-item">效率工具：AI 写作、翻译</p>
+    </div>
+    <div class="detail-card">
+      <p class="detail-title">技术覆盖</p>
+      <p class="detail-item">前端：React Native (Expo Web) + TypeScript + Zustand</p>
+      <p class="detail-item">后端：NestJS + Prisma ORM + JWT 认证</p>
+      <p class="detail-item">AI：DeepSeek / 通义千问 / DashScope VL / DashScope ASR</p>
+      <p class="detail-item">向量：ChromaDB + SiliconFlow Embedding</p>
+      <p class="detail-item">图像：Stable Diffusion 1.5 (本地推理)</p>
+      <p class="detail-item">OCR：PaddleOCR (本地部署)</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

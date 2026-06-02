@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+.header {
+  background: #ffffff;
+  padding: 24pt 40pt;
+  border-bottom: 2pt solid #e5e7eb;
+}
+.accent-bar { width: 40pt; height: 3pt; background: #7c6aef; margin-bottom: 8pt; border-radius: 2pt; }
+.content {
+  flex: 1; display: flex; padding: 16pt 40pt; gap: 16pt;
+}
+.col { width: 50%; display: flex; flex-direction: column; gap: 10pt; }
+.feature-card {
+  background: #ffffff; border-radius: 10pt; padding: 14pt 16pt;
+  border: 1pt solid #e5e7eb; flex: 1;
+}
+.feature-title {
+  color: #7c3aed; font-size: 12pt; font-weight: 700; margin: 0 0 6pt 0;
+}
+.feature-desc {
+  color: #333; font-size: 11pt; margin: 0; line-height: 1.5;
+}
+.highlight {
+  background: #fef3c7; border-left: 3pt solid #f59e0b;
+  padding: 6pt 10pt; border-radius: 0 6pt 6pt 0; margin-top: 6pt;
+}
+.highlight-text {
+  color: #92400e; font-size: 10pt; margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="accent-bar"></div>
+  <h2 style="color: #1a1a2e; font-size: 22pt; margin: 0;">AI 教育工具</h2>
+</div>
+<div class="content">
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">拍题答疑</p>
+      <p class="feature-desc">DashScope 视觉模型端到端识别题目 + 解题。不使用 OCR，直接用视觉大模型处理。</p>
+      <div class="highlight">
+        <p class="highlight-text">技术亮点：qwen-vl-plus 视觉模型，一次调用完成识别+解题</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">作业批改</p>
+      <p class="feature-desc">视觉模型识别手写答案，逐题批改。输出：总体评价 → 逐题批改 → 知识点总结 → 学习建议。</p>
+    </div>
+  </div>
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">AI 出卷</p>
+      <p class="feature-desc">三种模式：相似卷（同知识点相似题）、错题巩固卷（针对性练习）、自定义试卷（自由描述）。</p>
+      <div class="highlight">
+        <p class="highlight-text">流程：视觉模型识别题目 JSON → LLM 生成试卷 → SSE 流式返回</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">文档阅读（RAG 管线）</p>
+      <p class="feature-desc">PDF/TXT 解析 → 分块(512字符) → ChromaDB 向量化 → AI 摘要(执行摘要+要点+大纲) → 文档问答(引用溯源)。</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

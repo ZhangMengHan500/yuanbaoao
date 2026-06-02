@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+.header {
+  background: #ffffff;
+  padding: 24pt 40pt;
+  border-bottom: 2pt solid #e5e7eb;
+}
+.accent-bar { width: 40pt; height: 3pt; background: #7c6aef; margin-bottom: 8pt; border-radius: 2pt; }
+.content {
+  flex: 1; display: flex; padding: 16pt 40pt; gap: 16pt;
+}
+.col { width: 50%; display: flex; flex-direction: column; gap: 10pt; }
+.feature-card {
+  background: #ffffff; border-radius: 10pt; padding: 14pt 16pt;
+  border: 1pt solid #e5e7eb; flex: 1;
+}
+.feature-title {
+  color: #7c3aed; font-size: 12pt; font-weight: 700; margin: 0 0 6pt 0;
+}
+.feature-desc {
+  color: #333; font-size: 11pt; margin: 0; line-height: 1.5;
+}
+.flow-box {
+  background: #f0f0ff; border-radius: 6pt; padding: 8pt 10pt; margin-top: 6pt;
+}
+.flow-text {
+  color: #5b21b6; font-size: 9pt; margin: 0; line-height: 1.4;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="accent-bar"></div>
+  <h2 style="color: #1a1a2e; font-size: 22pt; margin: 0;">AI 图像创作</h2>
+</div>
+<div class="content">
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">AI 生图（Stable Diffusion）</p>
+      <p class="feature-desc">本地 SD 1.5 推理，适配 4GB 显存。float16 + attention slicing 优化。</p>
+      <div class="flow-box">
+        <p class="flow-text">前端 → POST /create/ai-gen → Python Service (localhost:8000)</p>
+        <p class="flow-text">→ SD img2img 推理 → 每步回调进度 → 返回图片</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">智能 P 图</p>
+      <p class="feature-desc">6 种编辑功能：扩图、变清晰、人像美颜、去除杂物、图片美化、风格迁移。复用 SD img2img 管线。</p>
+    </div>
+  </div>
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">王者 COS 照</p>
+      <p class="feature-desc">人脸融合技术，5 个英雄角色，实时预览生成效果。用户上传人脸 + 选择英雄 → SD 生成 COS 照。</p>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">图生图</p>
+      <p class="feature-desc">基于参考图 + Prompt 的图像变换，支持自定义风格和参数调节。</p>
+      <div class="flow-box">
+        <p class="flow-text">Python Service 核心：</p>
+        <p class="flow-text">model = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")</p>
+        <p class="flow-text">model.enable_attention_slicing()  # 4GB 显存适配</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

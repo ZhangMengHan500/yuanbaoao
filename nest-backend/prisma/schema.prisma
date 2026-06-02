@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  username    String
+  password    String
+  avatar      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sessions    Session[]
+  imageJobs   ImageJob[]
+  videoJobs   VideoJob[]
+  readingDocs ReadingDoc[]
+}
+
+// 聊天会话模型
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String   @default("New Chat")
+  personaId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  persona   Persona? @relation(fields: [personaId], references: [id])
+  messages  Message[]
+
+  @@index([userId])
+}
+
+// 消息模型
+model Message {
+  id        String   @id @default(uuid())
+  sessionId String
+  role      String   // "user" | "assistant" | "system"
+  content   String
+  imageUrl  String?  // 拍照答疑的图片URL
+  createdAt DateTime @default(now())
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+// 角色人设模型
+model Persona {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  systemPrompt String
+  avatar       String?
+  isDefault    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+}
+
+// 知识文档模型
+model KnowledgeDoc {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  docType   String   @default("text") // "text" | "pdf" | "url"
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([title])
+}
+
+// 风格分类
+model StyleCategory {
+  id        String           @id @default(uuid())
+  name      String           @unique
+  sort      Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  templates AiStyleTemplate[]
+
+  @@index([sort])
+  @@map("style_category")
+}
+
+// AI 风格模板
+model AiStyleTemplate {
+  id         String         @id @default(uuid())
+  name       String
+  coverImg   String         @map("cover_img")
+  prompt     String
+  categoryId String         @map("category_id")
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  category   StyleCategory  @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+  @@map("ai_style_template")
+}
+
+// AI 创作模板
+model Template {
+  id          String   @id @default(uuid())
+  name        String                          // 模板名称
+  category    String                          // 分类：写真/灵感/萌宠/头像/表情包
+  description String?                         // 模板描述
+  stylePrompt String                          // LangChain 风格提示词
+  previewUrl  String                          // 预览图 URL
+  hasOriginal Boolean   @default(false)       // 是否有原图标识
+  isActive    Boolean   @default(true)        // 是否上架
+  sortOrder   Int       @default(0)           // 排序权重
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  imageJobs   ImageJob[]
+
+  @@index([category])
+  @@index([isActive, sortOrder])
+}
+
+// 王者COS英雄模板
+model CosHero {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  color         String
+  desc          String
+  imageUrl      String?  @map("image_url")
+  previewPrompt String   @map("preview_prompt")
+  cosPrompt     String   @map("cos_prompt")
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([sortOrder])
+  @@map("cos_hero")
+}
+
+// AI 图片生成任务
+model ImageJob {
+  id                String    @id @default(uuid())
+  userId            String
+  templateId        String?
+  jobType           String                    // "ai_gen" | "ai_edit" | "cos"
+  status            String    @default("pending") // pending/processing/completed/failed
+  prompt            String                    // 最终组合提示词
+  negativePrompt    String?                   // 反向提示词
+  referenceImageUrl String?                   // 用户上传的参考图 URL
+  resultImageUrl    String?                   // 生成结果图 URL
+  stylePrompt       String?                   // 使用的模板风格提示词
+  errorMsg          String?                   // 失败原因
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template          Template? @relation(fields: [templateId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+// AI 视频生成任务
+model VideoJob {
+  id                String    @id @default(uuid())
+  userId            String
+  jobType           String    // "txt2vid" | "img2vid"
+  status            String    @default("pending") // pending/processing/completed/failed
+  prompt            String    // 文字提示词
+  negativePrompt    String?
+  inputImageUrl     String?   // I2V 模式的输入图片 URL
+  resultVideoUrl    String?   // 生成结果视频 URL
+  model             String?   // 使用的模型名
+  resolution        String?   // 分辨率 如 "1280x720"
+  externalTaskId    String?   // SiliconFlow 任务 ID (用于轮询)
+  errorMsg          String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ==================== 文档阅读模块 ====================
+
+// 文档阅读 - 文档表
+model ReadingDoc {
+  id            String   @id @default(uuid())
+  userId        String
+  title         String
+  fileUrl       String
+  fileType      String   @default("pdf")
+  fileSize      Int
+  pageCount     Int?
+  wordCount     Int?
+  status        String   @default("pending") // pending/parsing/ready/error
+  parseError    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id])
+  chunks        ReadingChunk[]
+  summaries     ReadingSummary[]
+  conversations DocConversation[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+// 文档分块（带元数据）
+model ReadingChunk {
+  id            String   @id @default(uuid())
+  documentId    String
+  content       String
+  chunkIndex    Int
+  pageNumber    Int?
+  paragraphNum  Int?
+  title         String?
+  startOffset   Int
+  endOffset     Int
+  tokenCount    Int
+  vectorId      String?
+  createdAt     DateTime @default(now())
+
+  document      ReadingDoc @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([pageNumber])
+}
+
+// 文档对话
+model DocConversation {
+  id            String   @id @default(uuid())
+  documentId    String
+  userId        String
+  title         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  document      ReadingDoc @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  messages      DocMessage[]
+
+  @@index([documentId])
+}
+
+// 文档问答消息（带引用）
+model DocMessage {
+  id              String   @id @default(uuid())
+  conversationId  String
+  role            String
+  content         String
+  citations       Json?
+  createdAt       DateTime @default(now())
+
+  conversation    DocConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+// 文档摘要
+model ReadingSummary {
+  id              String   @id @default(uuid())
+  documentId      String
+  type            String   // executive/key_points/outline
+  content         String
+  chapterIndex    Int?
+  createdAt       DateTime @default(now())
+
+  document        ReadingDoc @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}

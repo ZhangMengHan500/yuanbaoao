@@ -1,0 +1,14 @@
+{
+  "name": "YuanBaoAI",
+  "displayName": "元宝AI",
+  "expo": {
+    "name": "元宝AI",
+    "slug": "yuanbao-ai",
+    "version": "1.0.0",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro",
+      "title": "元宝AI"
+    }
+  }
+}

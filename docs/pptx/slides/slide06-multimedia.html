@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+.header {
+  background: #ffffff;
+  padding: 24pt 40pt;
+  border-bottom: 2pt solid #e5e7eb;
+}
+.accent-bar { width: 40pt; height: 3pt; background: #7c6aef; margin-bottom: 8pt; border-radius: 2pt; }
+.content {
+  flex: 1; display: flex; padding: 16pt 40pt; gap: 16pt;
+}
+.col { width: 50%; display: flex; flex-direction: column; gap: 10pt; }
+.feature-card {
+  background: #ffffff; border-radius: 10pt; padding: 14pt 16pt;
+  border: 1pt solid #e5e7eb; flex: 1;
+}
+.feature-title {
+  color: #7c3aed; font-size: 12pt; font-weight: 700; margin: 0 0 6pt 0;
+}
+.feature-desc {
+  color: #333; font-size: 11pt; margin: 0; line-height: 1.5;
+}
+.flow-box {
+  background: #f0f0ff; border-radius: 6pt; padding: 8pt 10pt; margin-top: 6pt;
+}
+.flow-text {
+  color: #5b21b6; font-size: 9pt; margin: 0; line-height: 1.4;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="accent-bar"></div>
+  <h2 style="color: #1a1a2e; font-size: 22pt; margin: 0;">AI 多媒体 & 效率工具</h2>
+</div>
+<div class="content">
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">AI 录音笔</p>
+      <p class="feature-desc">实时语音转写（DashScope ASR）+ AI 总结 + AI 分析。Socket.IO 双向通信实现流式转写。</p>
+      <div class="flow-box">
+        <p class="flow-text">前端录音 → WebSocket → NestJS RecordingGateway</p>
+        <p class="flow-text">→ DashScope ASR 实时识别 → interim-result 事件</p>
+        <p class="flow-text">→ recognition-complete → AI 总结 + 分析</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">AI 语音通话</p>
+      <p class="feature-desc">沉浸式语音对话，TTS 实时语音合成，支持自定义角色语音。ASR → LLM → TTS 全链路。</p>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">语音输入</p>
+      <p class="feature-desc">MediaRecorder 录音 → 后端 DashScope ASR 识别 → 文字填入输入框。替代浏览器 Web Speech API（国内不可用）。</p>
+    </div>
+  </div>
+  <div class="col">
+    <div class="feature-card">
+      <p class="feature-title">AI 生视频</p>
+      <p class="feature-desc">文本/图片生成视频，支持多种风格。调用外部视频生成 API，异步生成 + 轮询进度。</p>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">AI 写作</p>
+      <p class="feature-desc">全体裁写作（作文、周报、朋友圈文案等），多风格模板。SSE 流式生成。</p>
+    </div>
+    <div class="feature-card">
+      <p class="feature-title">翻译</p>
+      <p class="feature-desc">多语言互译 + 拍照翻译（OCR + 翻译）。支持实时流式翻译结果。</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
