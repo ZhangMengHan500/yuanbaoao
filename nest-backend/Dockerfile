@@ -56,4 +56,4 @@ RUN mkdir -p uploads
 EXPOSE 3000
 
 # 启动命令
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/main"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/src/main"]
