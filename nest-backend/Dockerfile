@@ -34,7 +34,13 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
-# 复制构建产物（不需要再装 apt 包了）
+# 使用阿里云镜像加速 apt
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
+
+# 安装 Prisma 需要的 OpenSSL
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+# 复制构建产物
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
