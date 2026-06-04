@@ -3,11 +3,12 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# 安装系统依赖（sharp 需要）
+# 使用阿里云镜像加速 apt
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
+
+# 安装系统依赖（sharp 需要）+ 生产依赖（openssl）一次性装完
 RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
+    python3 make g++ openssl \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件
@@ -29,12 +30,7 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
-# 安装生产依赖的系统库
-RUN apt-get update && apt-get install -y \
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
-
-# 复制构建产物
+# 复制构建产物（不需要再装 apt 包了）
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
