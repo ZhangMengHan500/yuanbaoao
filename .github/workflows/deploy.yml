@@ -26,8 +26,8 @@ jobs:
       - name: Build Expo Web Frontend
         working-directory: ./rn-app
         run: |
-          npm install
-          chmod +x node_modules/.bin/expo
+          npm install --legacy-peer-deps
+          chmod +x node_modules/.bin/expo 2>/dev/null || true
           npx expo export --platform web
 
       - name: Login to Docker Hub
