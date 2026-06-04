@@ -18,7 +18,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import {Audio} from 'expo-av';
+// Web环境使用MediaRecorder API进行录音
 import Markdown from 'react-native-markdown-display';
 import {io, Socket} from 'socket.io-client';
 import {API_BASE_URL, COLORS} from '../constants';
@@ -432,15 +432,24 @@ const RecordingScreen = ({navigation}: any) => {
           return;
         }
       } else {
-        const {status: permStatus} = await Audio.requestPermissionsAsync();
-        if (permStatus !== 'granted') {
+        // Native环境：使用MediaRecorder API（简化版）
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+          mediaRecorderRef.current = new MediaRecorder(stream);
+          audioChunksRef.current = [];
+
+          mediaRecorderRef.current.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              audioChunksRef.current.push(event.data);
+            }
+          };
+
+          mediaRecorderRef.current.start(1000);
+        } catch (err) {
           Alert.alert('提示', '需要麦克风权限才能录音');
           stopRecording();
           return;
         }
-        await Audio.setAudioModeAsync({allowsRecordingIOS: true, playsInSilentModeIOS: true});
-        const {recording} = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-        recordingRef.current = recording;
       }
 
       // 创建用户消息
@@ -819,9 +828,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.light.surface, borderRadius: 12, overflow: 'hidden',
   },
   tab: {flex: 1, paddingVertical: 12, alignItems: 'center', backgroundColor: 'transparent'},
-  tabActive: {backgroundColor: COLORS.light.surfaceAlt},
-  tabText: {fontSize: 14, fontWeight: '500', color: COLORS.text.lightMuted},
-  tabTextActive: {color: COLORS.text.white, fontWeight: '600'},
+  tabActive: {backgroundColor: COLORS.accent.primary},
+  tabText: {fontSize: 14, fontWeight: '600', color: COLORS.text.lightPrimary},
+  tabTextActive: {color: COLORS.text.white, fontWeight: '700'},
   contentArea: {flex: 1, marginHorizontal: 16, marginTop: 12},
   chatScroll: {flex: 1},
   chatContent: {paddingBottom: 12},

@@ -1,16 +1,16 @@
 import { Controller, Post, Body, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RecordingService } from '../recording/recording.service';
+import { execFile } from 'child_process';
+import * as path from 'path';
 
 @Controller('voice-call')
 export class VoiceCallController {
   private readonly logger = new Logger(VoiceCallController.name);
+  private readonly ttsScript: string;
 
-  constructor(
-    private configService: ConfigService,
-    private recordingService: RecordingService,
-  ) {
-    this.logger.log('VoiceCall controller ready');
+  constructor(private configService: ConfigService) {
+    this.ttsScript = path.join(process.cwd(), 'tts_server.py');
+    this.logger.log(`VoiceCall controller ready, ttsScript: ${this.ttsScript}`);
   }
 
   @Post('tts')
@@ -23,12 +23,10 @@ export class VoiceCallController {
     this.logger.log(`TTS request: text="${text.substring(0, 50)}...", voice=${voice}`);
 
     try {
-      // 使用 DashScope TTS 服务
-      const audioBuffer = await this.recordingService.synthesizeSpeech(text);
+      // 调用 Python TTS 脚本
+      const audioBase64 = await this.callPythonTTS(text, voice);
 
-      if (audioBuffer && audioBuffer.length > 0) {
-        // 将 Buffer 转为 base64
-        const audioBase64 = audioBuffer.toString('base64');
+      if (audioBase64 && audioBase64.length > 0) {
         this.logger.log(`TTS success: ${audioBase64.length} chars base64`);
         return { audio: audioBase64 };
       }
@@ -39,5 +37,34 @@ export class VoiceCallController {
       this.logger.error(`TTS failed: ${err.message}`);
       return { audio: '' };
     }
+  }
+
+  /**
+   * 调用 Python TTS 脚本
+   */
+  private callPythonTTS(text: string, voice: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const python = process.env.PYTHON || 'python';
+      const input = JSON.stringify({ text, voice });
+
+      const child = execFile(python, [this.ttsScript], {
+        timeout: 30000,
+        maxBuffer: 10 * 1024 * 1024,
+      }, (error, stdout, stderr) => {
+        if (error) {
+          this.logger.error(`Python TTS exec error: ${error.message}`);
+          if (stderr) this.logger.error(`stderr: ${stderr.substring(0, 200)}`);
+          reject(error);
+          return;
+        }
+        resolve(stdout.trim());
+      });
+
+      // 通过 stdin 传递参数
+      if (child.stdin) {
+        child.stdin.write(input);
+        child.stdin.end();
+      }
+    });
   }
 }

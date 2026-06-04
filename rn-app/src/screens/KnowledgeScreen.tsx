@@ -8,6 +8,8 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import {knowledgeAPI} from '../services/api';
@@ -26,6 +28,8 @@ const KnowledgeScreen = ({navigation}: any) => {
   const [docs, setDocs] = useState<KnowledgeDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<KnowledgeDoc | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const fetchDocs = useCallback(async () => {
     try {
@@ -106,8 +110,16 @@ const KnowledgeScreen = ({navigation}: any) => {
     [],
   );
 
+  const handlePreview = useCallback((doc: KnowledgeDoc) => {
+    setPreviewDoc(doc);
+    setShowPreview(true);
+  }, []);
+
   const renderItem = ({item}: {item: KnowledgeDoc}) => (
-    <View style={styles.docCard}>
+    <TouchableOpacity
+      style={styles.docCard}
+      onPress={() => handlePreview(item)}
+      activeOpacity={0.7}>
       <View style={styles.docInfo}>
         <Text style={styles.docTitle} numberOfLines={1}>
           {item.docType === 'pdf' ? '📄' : '📝'} {item.title}
@@ -123,7 +135,7 @@ const KnowledgeScreen = ({navigation}: any) => {
         activeOpacity={0.7}>
         <Text style={styles.deleteBtnText}>删除</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -180,6 +192,44 @@ const KnowledgeScreen = ({navigation}: any) => {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* 文档预览 Modal */}
+      <Modal
+        visible={showPreview}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPreview(false)}>
+        <View style={styles.previewOverlay}>
+          <View style={styles.previewContainer}>
+            {/* 预览头部 */}
+            <View style={styles.previewHeader}>
+              <Text style={styles.previewTitle} numberOfLines={1}>
+                {previewDoc?.docType === 'pdf' ? '📄' : '📝'} {previewDoc?.title}
+              </Text>
+              <TouchableOpacity
+                style={styles.previewCloseBtn}
+                onPress={() => setShowPreview(false)}
+                activeOpacity={0.7}>
+                <Text style={styles.previewCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 文档信息 */}
+            <View style={styles.previewMeta}>
+              <Text style={styles.previewMetaText}>
+                {previewDoc?.docType.toUpperCase()} · {previewDoc?.content.length} 字
+              </Text>
+            </View>
+
+            {/* 文档内容 */}
+            <ScrollView style={styles.previewContent} showsVerticalScrollIndicator={true}>
+              <Text style={styles.previewContentText}>
+                {previewDoc?.content || '暂无内容'}
+              </Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -319,6 +369,66 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.text.white,
+  },
+  // 预览Modal样式
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  previewContainer: {
+    backgroundColor: COLORS.light.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '85%',
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.light.border,
+  },
+  previewTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text.lightPrimary,
+    marginRight: 12,
+  },
+  previewCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.light.bg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewCloseText: {
+    fontSize: 16,
+    color: COLORS.text.lightMuted,
+    fontWeight: '600',
+  },
+  previewMeta: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: COLORS.light.bg,
+  },
+  previewMetaText: {
+    fontSize: 12,
+    color: COLORS.text.lightMuted,
+  },
+  previewContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    maxHeight: 500,
+  },
+  previewContentText: {
+    fontSize: 14,
+    color: COLORS.text.lightPrimary,
+    lineHeight: 22,
   },
 });
 

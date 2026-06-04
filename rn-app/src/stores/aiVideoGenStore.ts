@@ -21,11 +21,19 @@ interface AiVideoGenState {
   status: Status;
   errorMsg: string;
   jobId: string | null;
+  negativePrompt: string;
+  numFrames: number;
+  fps: number;
+  motionStrength: number;
 
   setPrompt: (prompt: string) => void;
   setInputImage: (uri: string | null) => void;
   setResolution: (resolution: string) => void;
   setMode: (mode: Mode) => void;
+  setNegativePrompt: (prompt: string) => void;
+  setNumFrames: (frames: number) => void;
+  setFps: (fps: number) => void;
+  setMotionStrength: (strength: number) => void;
   generate: () => Promise<void>;
   reset: () => void;
 }
@@ -79,6 +87,10 @@ export const useAiVideoGenStore = create<AiVideoGenState>((set, get) => ({
   status: 'idle',
   errorMsg: '',
   jobId: null,
+  negativePrompt: '',
+  numFrames: 120, // 5秒 * 24帧/秒 = 120帧
+  fps: 24,
+  motionStrength: 0.8,
 
   setPrompt: (prompt) => set({prompt}),
   setInputImage: (uri) => {
@@ -87,9 +99,13 @@ export const useAiVideoGenStore = create<AiVideoGenState>((set, get) => ({
   },
   setResolution: (resolution) => set({resolution}),
   setMode: (mode) => set({mode}),
+  setNegativePrompt: (negativePrompt) => set({negativePrompt}),
+  setNumFrames: (numFrames) => set({numFrames}),
+  setFps: (fps) => set({fps}),
+  setMotionStrength: (motionStrength) => set({motionStrength}),
 
   generate: async () => {
-    const {prompt, inputImage, resolution, mode} = get();
+    const {prompt, inputImage, resolution, mode, negativePrompt, numFrames, fps, motionStrength} = get();
     if (!prompt.trim()) return;
 
     stopProgressTimer();
@@ -134,6 +150,10 @@ export const useAiVideoGenStore = create<AiVideoGenState>((set, get) => ({
         prompt,
         inputImageUrl,
         resolution,
+        negativePrompt,
+        numFrames,
+        fps,
+        motionStrength,
       });
 
       const jobId = result.data?.id || result.id;

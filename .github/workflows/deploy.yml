@@ -1,0 +1,80 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  SERVER_HOST: ${{ secrets.SERVER_HOST }}
+  SERVER_USER: ${{ secrets.SERVER_USER }}
+  SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+  DEPLOY_PATH: /opt/yuanbao-ai
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push NestJS backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nest-backend
+          push: true
+          tags: ${{ env.DOCKERHUB_USERNAME }}/yuanbao-app:latest
+
+      - name: Build and push OCR service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ocr-service
+          push: true
+          tags: ${{ env.DOCKERHUB_USERNAME }}/yuanbao-ocr:latest
+
+      - name: Build and push Python service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./python-service
+          push: true
+          tags: ${{ env.DOCKERHUB_USERNAME }}/yuanbao-sd:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ env.SERVER_SSH_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+
+            # 拉取最新代码
+            git pull origin main
+
+            # 拉取最新镜像
+            export DOCKERHUB_USERNAME=${{ env.DOCKERHUB_USERNAME }}
+            docker compose pull
+
+            # 重启服务（不丢数据）
+            docker compose up -d --remove-orphans
+
+            # 等待数据库就绪
+            sleep 5
+
+            # 数据库迁移
+            docker compose exec -T app npx prisma db push --skip-generate
+
+            # 清理旧镜像
+            docker image prune -f
+
+            echo "✅ 部署完成！"

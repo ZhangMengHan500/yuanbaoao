@@ -7,7 +7,7 @@ const SILICONFLOW_API_BASE = 'https://api.siliconflow.cn/v1';
 const SILICONFLOW_KEY = process.env.SILICONFLOW_API_KEY || '';
 const OUTPUT_DIR = './uploads/videos';
 
-// Wan2.2 模型
+// Wan2.2 模型（根据官方文档）
 const MODEL_T2V = 'Wan-AI/Wan2.2-T2V-A14B';
 const MODEL_I2V = 'Wan-AI/Wan2.2-I2V-A14B';
 
@@ -33,6 +33,10 @@ export class SiliconFlowVideo {
     prompt: string;
     inputImageUrl?: string;
     resolution?: string; // "1280x720" | "720x1280" | "960x960"
+    negativePrompt?: string;
+    numFrames?: number; // 帧数
+    fps?: number; // 帧率
+    motionStrength?: number; // 运动强度
   }): Promise<VideoSubmitResult> {
     if (!SILICONFLOW_KEY) {
       throw new Error('SILICONFLOW_API_KEY 未配置');
@@ -50,14 +54,25 @@ export class SiliconFlowVideo {
     };
 
     if (isImg2Vid && params.inputImageUrl) {
-      // SiliconFlow I2V 需要 base64 图片
-      const base64 = await this.imageToBase64(params.inputImageUrl);
-      if (base64) {
-        body.image = base64;
-      }
+      // SiliconFlow I2V 需要 image_url
+      body.image_url = params.inputImageUrl;
     }
 
-    this.logger.log(`Submitting video task: model=${model}, resolution=${resolution}`);
+    // 添加可选参数
+    if (params.negativePrompt) {
+      body.negative_prompt = params.negativePrompt;
+    }
+    if (params.numFrames) {
+      body.num_frames = params.numFrames;
+    }
+    if (params.fps) {
+      body.fps = params.fps;
+    }
+    if (params.motionStrength) {
+      body.motion_strength = params.motionStrength;
+    }
+
+    this.logger.log(`Submitting video task: model=${model}, resolution=${resolution}, img2vid=${isImg2Vid}`);
 
     const response = await fetch(`${SILICONFLOW_API_BASE}/video/submit`, {
       method: 'POST',
@@ -70,8 +85,10 @@ export class SiliconFlowVideo {
 
     if (!response.ok) {
       const errText = await response.text();
-      this.logger.error(`SiliconFlow video submit error: ${response.status} - ${errText}`);
-      throw new Error(`SiliconFlow API error: ${response.status}`);
+      this.logger.error(`SiliconFlow video submit error: ${response.status}`);
+      this.logger.error(`Request body: ${JSON.stringify(body)}`);
+      this.logger.error(`Response: ${errText}`);
+      throw new Error(`SiliconFlow API error: ${response.status} - ${errText}`);
     }
 
     const result = (await response.json()) as any;

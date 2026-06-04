@@ -29,6 +29,15 @@ class GenerateVideoDto {
   @IsOptional()
   @IsString()
   negativePrompt?: string;
+
+  @IsOptional()
+  numFrames?: number;
+
+  @IsOptional()
+  fps?: number;
+
+  @IsOptional()
+  motionStrength?: number;
 }
 
 @Controller('video')
@@ -45,11 +54,16 @@ export class VideoController {
     @CurrentUser() user: any,
     @Body() dto: GenerateVideoDto,
   ) {
-    return this.videoService.createJob(user.id, {
+    // 处理未登录用户
+    const userId = user?.id || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.videoService.createJob(userId, {
       prompt: dto.prompt,
       inputImageUrl: dto.inputImageUrl,
       resolution: dto.resolution,
       negativePrompt: dto.negativePrompt,
+      numFrames: dto.numFrames,
+      fps: dto.fps,
+      motionStrength: dto.motionStrength,
     });
   }
 
@@ -72,6 +86,8 @@ export class VideoController {
   ) {
     const p = page ? parseInt(page, 10) : 1;
     const ps = pageSize ? parseInt(pageSize, 10) : 20;
-    return this.videoService.getUserJobs(user.id, p, ps);
+    // 处理未登录用户
+    const userId = user?.id || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.videoService.getUserJobs(userId, p, ps);
   }
 }

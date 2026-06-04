@@ -51,6 +51,7 @@ export const useAuthStore = create<AuthState>(set => ({
 
   logout: () => {
     mmkvStorage.removeToken();
+    mmkvStorage.removeUser();
     set({token: null, user: null, isAuthenticated: false});
   },
 

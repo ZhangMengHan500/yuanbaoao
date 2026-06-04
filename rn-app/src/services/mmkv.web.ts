@@ -15,6 +15,7 @@ export const mmkvStorage = {
   getToken: () => get(STORAGE_KEYS.TOKEN) || null,
   setToken: (token: string) => set(STORAGE_KEYS.TOKEN, token),
   removeToken: () => remove(STORAGE_KEYS.TOKEN),
+  removeUser: () => remove(STORAGE_KEYS.USER),
 
   getUser: () => {
     const data = get(STORAGE_KEYS.USER);

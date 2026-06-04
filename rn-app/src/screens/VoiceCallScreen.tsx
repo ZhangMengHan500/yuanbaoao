@@ -17,7 +17,7 @@ import {
   Easing,
   ScrollView,
 } from 'react-native';
-import {Audio} from 'expo-av';
+// Web环境不使用expo-av，直接使用HTMLAudioElement
 import {VoiceCallSocket} from '../services/voiceCallSocket';
 import {COLORS, SPACING, RADIUS, TYPOGRAPHY, API_BASE_URL} from '../constants';
 
@@ -55,7 +55,7 @@ const VoiceCallScreen = ({navigation}: any) => {
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const silentGainRef = useRef<GainNode | null>(null);
-  const nativeSoundRef = useRef<Audio.Sound | null>(null);
+  const nativeSoundRef = useRef<any>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -66,6 +66,7 @@ const VoiceCallScreen = ({navigation}: any) => {
   const scrollRef = useRef<ScrollView>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const processSpeechQueueRef = useRef<() => void>(() => {});
+  const greetingAddedRef = useRef(false); // 防止重复添加问候语
 
   // ── 呼吸光球动画 ──────────────────────────────────────
 
@@ -185,21 +186,21 @@ const VoiceCallScreen = ({navigation}: any) => {
     }
 
     // 停止 Web Speech API
-    if (Platform.OS === 'web' && typeof speechSynthesis !== 'undefined') {
+    if (typeof speechSynthesis !== 'undefined') {
       speechSynthesis.cancel();
     }
     speechSynthRef.current = null;
 
-    // 停止 Native 音频播放
+    // 停止音频播放
     if (nativeSoundRef.current) {
-      try { await nativeSoundRef.current.unloadAsync(); } catch {}
+      try { nativeSoundRef.current.pause(); } catch {}
       nativeSoundRef.current = null;
     }
   }, []);
 
   // ── 语音朗读（后端 TTS + Web Audio API）────────────
 
-  // 调用后端 TTS 获取音频并播放（Web 用 <audio>，Native 用 expo-av）
+  // 调用后端 TTS 获取音频并播放
   const playBackendTTS = useCallback(async (text: string): Promise<boolean> => {
     try {
       console.log('[VoiceCall] Backend TTS fetching:', text.substring(0, 30));
@@ -207,7 +208,7 @@ const VoiceCallScreen = ({navigation}: any) => {
       const response = await fetch(`${API_BASE_URL}/voice-call/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, voice: '七七' }),
       });
 
       if (!response.ok) {
@@ -216,77 +217,65 @@ const VoiceCallScreen = ({navigation}: any) => {
       }
 
       const result = await response.json();
-      // 响应被 TransformInterceptor 包装为 { success, data: { audio } }
       const audioBase64 = result.data?.audio || result.audio;
       if (!audioBase64) {
-        console.log('[VoiceCall] Backend TTS returned empty audio', JSON.stringify(result).substring(0, 200));
+        console.log('[VoiceCall] Backend TTS returned empty audio');
         return false;
       }
 
-      if (Platform.OS === 'web') {
-        // Web: 将 base64 转为 Blob，用 <audio> 元素播放
-        const binaryString = atob(audioBase64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: 'audio/mpeg' });
-        const url = URL.createObjectURL(blob);
+      console.log('[VoiceCall] Backend TTS audio received, length:', audioBase64.length);
 
-        await new Promise<void>((resolve, reject) => {
-          // eslint-disable-next-line no-undef
-          const audio = new window.Audio(url);
-          audio.onended = () => {
-            console.log('[VoiceCall] Backend TTS audio finished');
-            URL.revokeObjectURL(url);
-            resolve();
-          };
-          audio.onerror = () => {
-            console.error('[VoiceCall] Backend TTS audio error');
-            URL.revokeObjectURL(url);
-            reject(new Error('Audio playback failed'));
-          };
-          audio.play().then(() => {
-            console.log('[VoiceCall] Backend TTS audio playing');
-          }).catch((err) => {
-            console.error('[VoiceCall] Backend TTS play() failed:', err);
-            URL.revokeObjectURL(url);
-            reject(err);
-          });
-          // 超时保护
-          setTimeout(() => {
-            URL.revokeObjectURL(url);
-            resolve();
-          }, 30000);
-        });
-      } else {
-        // Native: 用 expo-av 播放 base64 音频
-        if (nativeSoundRef.current) {
-          try { await nativeSoundRef.current.unloadAsync(); } catch {}
-          nativeSoundRef.current = null;
-        }
-        const {sound} = await Audio.Sound.createAsync(
-          {uri: `data:audio/mpeg;base64,${audioBase64}`},
-          {shouldPlay: true},
-        );
-        nativeSoundRef.current = sound;
-        console.log('[VoiceCall] Backend TTS native audio playing');
-
-        await new Promise<void>((resolve) => {
-          sound.setOnPlaybackStatusUpdate((status) => {
-            if (status.isLoaded && status.didJustFinish) {
-              console.log('[VoiceCall] Backend TTS native audio finished');
-              resolve();
-            }
-          });
-          // 超时保护
-          setTimeout(resolve, 30000);
-        });
+      // 播放音频
+      const binaryString = atob(audioBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
       }
+      const blob = new Blob([bytes], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+
+      await new Promise<void>((resolve) => {
+        // eslint-disable-next-line no-undef
+        const audio = new window.Audio(url);
+        audio.volume = 1.0;
+        currentAudioRef.current = audio;
+
+        audio.onended = () => {
+          console.log('[VoiceCall] Backend TTS audio finished');
+          currentAudioRef.current = null;
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+
+        audio.onerror = (e) => {
+          console.error('[VoiceCall] Backend TTS audio error:', e);
+          currentAudioRef.current = null;
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+
+        audio.play().then(() => {
+          console.log('[VoiceCall] Backend TTS audio playing, volume:', audio.volume);
+        }).catch((err) => {
+          console.error('[VoiceCall] Backend TTS play() failed:', err);
+          currentAudioRef.current = null;
+          URL.revokeObjectURL(url);
+          resolve();
+        });
+
+        // 超时保护
+        setTimeout(() => {
+          if (currentAudioRef.current) {
+            currentAudioRef.current = null;
+            URL.revokeObjectURL(url);
+          }
+          resolve();
+        }, 30000);
+      });
 
       return true;
     } catch (err) {
-      console.log('[VoiceCall] Backend TTS error:', err);
+      console.error('[VoiceCall] Backend TTS error:', err);
       return false;
     }
   }, []);
@@ -304,23 +293,15 @@ const VoiceCallScreen = ({navigation}: any) => {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'zh-CN';
-      utterance.rate = 1.0;
+      utterance.rate = 1.2; // 加快语速，减少延迟
       utterance.volume = 1.0;
 
-      // 异步加载 voices
-      const setVoice = () => {
-        const voices = speechSynthesis.getVoices();
-        const zhVoice = voices.find(v => v.lang.startsWith('zh'));
-        if (zhVoice) {
-          utterance.voice = zhVoice;
-          console.log('[VoiceCall] Using voice:', zhVoice.name);
-        } else {
-          console.log('[VoiceCall] No zh voice found, using default');
-        }
-      };
-      setVoice();
-      if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = setVoice;
+      // 设置语音
+      const voices = speechSynthesis.getVoices();
+      const zhVoice = voices.find(v => v.lang.startsWith('zh'));
+      if (zhVoice) {
+        utterance.voice = zhVoice;
+        console.log('[VoiceCall] Using voice:', zhVoice.name);
       }
 
       utterance.onend = () => {
@@ -331,10 +312,12 @@ const VoiceCallScreen = ({navigation}: any) => {
         console.error('[VoiceCall] Web Speech error:', e);
         resolve();
       };
-      speechSynthesis.speak(utterance);
 
-      // 超时保护：15秒后无论如何继续
-      setTimeout(resolve, 15000);
+      speechSynthesis.speak(utterance);
+      console.log('[VoiceCall] Web Speech started');
+
+      // 超时保护：10秒后无论如何继续
+      setTimeout(resolve, 10000);
     });
   }, []);
 
@@ -357,6 +340,7 @@ const VoiceCallScreen = ({navigation}: any) => {
       const url = URL.createObjectURL(blob);
       // eslint-disable-next-line no-undef
       const audio = new window.Audio(url);
+      audio.volume = 1.0; // 设置音量为最大
       currentAudioRef.current = audio;
       await new Promise<void>((resolve) => {
         audio.onended = () => {
@@ -372,7 +356,7 @@ const VoiceCallScreen = ({navigation}: any) => {
           resolve();
         };
         audio.play().then(() => {
-          console.log('[VoiceCall] playAudioWeb: audio playing');
+          console.log('[VoiceCall] playAudioWeb: audio playing, volume:', audio.volume);
         }).catch((err) => {
           console.error('[VoiceCall] playAudioWeb: play() failed', err);
           currentAudioRef.current = null;
@@ -385,20 +369,26 @@ const VoiceCallScreen = ({navigation}: any) => {
     }
   }, []);
 
-  // ── Native 音频播放 ─────────────────────────────────
+  // ── 音频播放 ─────────────────────────────────
 
   const playAudioNative = useCallback(async (audioBase64: string) => {
     try {
       console.log('[VoiceCall] playAudioNative: starting, base64 length:', audioBase64.length);
       if (nativeSoundRef.current) {
-        await nativeSoundRef.current.unloadAsync();
+        nativeSoundRef.current.pause();
         nativeSoundRef.current = null;
       }
-      const {sound} = await Audio.Sound.createAsync(
-        {uri: `data:audio/mpeg;base64,${audioBase64}`},
-        {shouldPlay: true},
-      );
-      nativeSoundRef.current = sound;
+      const binaryString = atob(audioBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      // eslint-disable-next-line no-undef
+      const audio = new window.Audio(url);
+      nativeSoundRef.current = audio;
+      audio.play();
       console.log('[VoiceCall] playAudioNative: audio playing');
     } catch (err) {
       console.error('[VoiceCall] Native audio playback failed:', err);
@@ -429,12 +419,14 @@ const VoiceCallScreen = ({navigation}: any) => {
         await playAudioNative(item.data);
       }
     } else {
-      // 文本，需要 TTS — 后端生成音频，两个平台统一处理
+      // 文本，使用后端TTS生成音频
       const success = await playBackendTTS(item.data);
-      if (!success && Platform.OS === 'web') {
-        // 仅 Web 回退到浏览器内置语音
+      if (!success) {
         console.log('[VoiceCall] Backend TTS failed, trying Web Speech API');
-        await playWebSpeech(item.data);
+        // 降级到Web Speech API
+        if (Platform.OS === 'web') {
+          await playWebSpeech(item.data);
+        }
       }
     }
 
@@ -578,10 +570,22 @@ const VoiceCallScreen = ({navigation}: any) => {
       }
       console.log('[VoiceCall] Socket connected');
 
+      // 激活音频上下文（浏览器自动播放策略）
+      try {
+        // eslint-disable-next-line no-undef
+        const silentAudio = new window.Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        silentAudio.volume = 0;
+        await silentAudio.play();
+        console.log('[VoiceCall] Audio context activated');
+      } catch (e) {
+        console.log('[VoiceCall] Silent audio failed:', e);
+      }
+
       socket.on('call-started', () => {
         console.log('[VoiceCall] Call started');
         setCallState('idle');
         startTimer();
+        // 问候语由AI生成并通过ai-speech事件发送，不需要手动添加
       });
 
       socket.on('call-error', ({message}: {message: string}) => {
@@ -668,6 +672,7 @@ const VoiceCallScreen = ({navigation}: any) => {
       socket.on('call-ended', async () => {
         console.log('[VoiceCall] Call ended by server');
         setCallState('ended');
+        greetingAddedRef.current = false; // 重置问候语标志
         await cleanupAll();
         setTimeout(() => navigation.goBack(), 500);
       });
@@ -793,11 +798,6 @@ const VoiceCallScreen = ({navigation}: any) => {
               {callState === 'ai-speaking' && aiSpeechText === '正在思考...' && (
                 <View style={[styles.msgBubble, styles.msgAi]}>
                   <Text style={[styles.msgText, styles.msgTextAi]}>●●●</Text>
-                </View>
-              )}
-              {aiSpeechText && aiSpeechText !== '正在思考...' && callState === 'ai-speaking' && (
-                <View style={[styles.msgBubble, styles.msgAi]}>
-                  <Text style={[styles.msgText, styles.msgTextAi]}>{aiSpeechText}</Text>
                 </View>
               )}
             </ScrollView>

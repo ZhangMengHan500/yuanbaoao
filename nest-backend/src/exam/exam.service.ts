@@ -162,7 +162,14 @@ ${qList}
   }
 
   async *generateCustomExam(params: CustomExamParams) {
-    const prompt = `你是一位专业的试卷命题专家。请根据以下要求生成一份试卷。
+    // 判断是否有结构化字段（subject/grade 等被显式传入）
+    const hasStructuredFields = !!(params.subject || params.grade || params.questionTypes || params.questionCount || params.difficulty || params.knowledgePoints);
+
+    let prompt: string;
+
+    if (hasStructuredFields) {
+      // 有结构化字段时，用字段构建 prompt
+      prompt = `你是一位专业的试卷命题专家。请根据以下要求生成一份试卷。
 
 【出题要求】
 学科：${params.subject || '数学'}
@@ -173,7 +180,8 @@ ${qList}
 知识点：${params.knowledgePoints || '综合'}
 ${params.description ? `\n【补充说明】\n${params.description}` : ''}
 
-请按以下格式输出：
+请严格按以下要求生成试卷，确保题目内容与出题要求完全匹配。输出格式：
+
 # ${params.subject || '学科'}${params.grade || ''}练习卷
 
 ## 一、选择题
@@ -188,6 +196,35 @@ ${params.description ? `\n【补充说明】\n${params.description}` : ''}
 ---
 ### 参考答案与解析
 ...`;
+    } else {
+      // 只有 description 时，让 LLM 从描述中自主解析所有信息
+      prompt = `你是一位专业的试卷命题专家。请根据用户的需求生成一份试卷。
+
+【用户需求】
+${params.description}
+
+请先分析用户需求，提取学科、年级、题型、数量、难度、知识点等信息，然后严格按提取的信息生成试卷。
+
+要求：
+1. 仔细分析用户描述，准确提取学科、年级、题型、数量等要求
+2. 如果用户没有明确指定某些参数，根据学科和年级合理推断
+3. 题目内容必须与用户描述的主题和要求高度匹配
+4. 严格按照用户要求的题型和数量出题
+
+输出格式：
+
+# [根据需求生成的标题]
+
+## 一、[题型名称]
+[题目内容]
+
+## 二、[题型名称]
+...
+
+---
+### 参考答案与解析
+...`;
+    }
 
     yield* this.llmService.streamChat([{ role: 'user', content: prompt }]);
   }

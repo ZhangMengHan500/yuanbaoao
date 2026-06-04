@@ -79,9 +79,17 @@ const AiVideoGenScreen = ({navigation}: any) => {
     resultVideoUrl,
     status,
     errorMsg,
+    negativePrompt,
+    numFrames,
+    fps,
+    motionStrength,
     setPrompt,
     setInputImage,
     setResolution,
+    setNegativePrompt,
+    setNumFrames,
+    setFps,
+    setMotionStrength,
     generate,
     reset,
   } = useAiVideoGenStore();
@@ -289,6 +297,83 @@ const AiVideoGenScreen = ({navigation}: any) => {
                   </Text>
                 </TouchableOpacity>
               ))}
+            </View>
+          </View>
+        )}
+
+        {/* 高级参数设置 */}
+        {!isDone && mode === 'img2vid' && (
+          <View style={styles.advancedSection}>
+            <Text style={styles.advancedTitle}>高级参数</Text>
+
+            {/* 反向提示词 */}
+            <View style={styles.paramRow}>
+              <Text style={styles.paramLabel}>反向提示词</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={negativePrompt}
+                onChangeText={setNegativePrompt}
+                placeholder="不想出现的内容（可选）"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            {/* 视频时长 */}
+            <View style={styles.paramRow}>
+              <Text style={styles.paramLabel}>视频时长</Text>
+              <View style={styles.paramBtnGroup}>
+                {[60, 120, 180].map(frames => (
+                  <TouchableOpacity
+                    key={frames}
+                    style={[styles.paramBtn, numFrames === frames && styles.paramBtnActive]}
+                    onPress={() => setNumFrames(frames)}
+                    activeOpacity={0.7}>
+                    <Text style={[styles.paramBtnText, numFrames === frames && styles.paramBtnTextActive]}>
+                      {frames / 24}秒
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* 帧率 */}
+            <View style={styles.paramRow}>
+              <Text style={styles.paramLabel}>帧率</Text>
+              <View style={styles.paramBtnGroup}>
+                {[24, 30].map(f => (
+                  <TouchableOpacity
+                    key={f}
+                    style={[styles.paramBtn, fps === f && styles.paramBtnActive]}
+                    onPress={() => setFps(f)}
+                    activeOpacity={0.7}>
+                    <Text style={[styles.paramBtnText, fps === f && styles.paramBtnTextActive]}>
+                      {f}fps
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* 运动强度 */}
+            <View style={styles.paramRow}>
+              <Text style={styles.paramLabel}>运动强度</Text>
+              <View style={styles.paramBtnGroup}>
+                {[
+                  {label: '轻微', value: 0.5},
+                  {label: '适中', value: 0.8},
+                  {label: '强烈', value: 1.0},
+                ].map(opt => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.paramBtn, motionStrength === opt.value && styles.paramBtnActive]}
+                    onPress={() => setMotionStrength(opt.value)}
+                    activeOpacity={0.7}>
+                    <Text style={[styles.paramBtnText, motionStrength === opt.value && styles.paramBtnTextActive]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
         )}
@@ -715,6 +800,66 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: COLORS.text.white,
     fontWeight: '700',
+  },
+
+  // 高级参数设置
+  advancedSection: {
+    marginTop: 16,
+    marginHorizontal: 16,
+    backgroundColor: COLORS.light.surface,
+    borderRadius: 12,
+    padding: 16,
+  },
+  advancedTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text.lightSecondary,
+    marginBottom: 16,
+  },
+  paramRow: {
+    marginBottom: 16,
+  },
+  paramLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.text.lightMuted,
+    marginBottom: 8,
+  },
+  paramInput: {
+    fontSize: 14,
+    color: COLORS.text.lightPrimary,
+    backgroundColor: COLORS.light.surfaceAlt,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: COLORS.light.border,
+  },
+  paramBtnGroup: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  paramBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.light.surfaceAlt,
+    borderWidth: 1,
+    borderColor: COLORS.light.border,
+    alignItems: 'center',
+  },
+  paramBtnActive: {
+    backgroundColor: COLORS.accent.primaryMuted,
+    borderColor: COLORS.accent.primary,
+  },
+  paramBtnText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.text.lightMuted,
+  },
+  paramBtnTextActive: {
+    color: COLORS.accent.primary,
   },
 });
 

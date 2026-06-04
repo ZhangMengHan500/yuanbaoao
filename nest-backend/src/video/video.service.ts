@@ -24,6 +24,9 @@ export class VideoService {
     inputImageUrl?: string;
     resolution?: string;
     negativePrompt?: string;
+    numFrames?: number;
+    fps?: number;
+    motionStrength?: number;
   }) {
     const jobType = params.inputImageUrl ? 'img2vid' : 'txt2vid';
     const resolution = params.resolution || '1280x720';

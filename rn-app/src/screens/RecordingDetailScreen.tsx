@@ -15,7 +15,7 @@ import {
   Easing,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
-import {Audio} from 'expo-av';
+// Web环境使用HTMLAudioElement播放音频
 import {Message} from '../types';
 import {COLORS} from '../constants';
 
@@ -32,7 +32,7 @@ const RecordingDetailScreen = ({route, navigation}: any) => {
     Number.isFinite((message.audioDuration || 0) * 1000) ? (message.audioDuration || 0) * 1000 : 0,
   );
   const [soundLoaded, setSoundLoaded] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<HTMLAudioElement | null>(null);
   const waveAnim = useRef(new Animated.Value(0)).current;
   const waveAnimLoop = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -50,39 +50,32 @@ const RecordingDetailScreen = ({route, navigation}: any) => {
   useEffect(() => {
     if (!message.audioUri) return;
     let cancelled = false;
-    const loadSound = async () => {
-      try {
-        const {sound} = await Audio.Sound.createAsync(
-          {uri: message.audioUri},
-          {shouldPlay: false},
-        );
-        if (cancelled) {
-          sound.unloadAsync();
-          return;
-        }
-        soundRef.current = sound;
-        sound.setOnPlaybackStatusUpdate(status => {
-          if (!status.isLoaded) return;
-          if (cancelled) return;
-          setPositionMs(status.positionMillis || 0);
-          const dur = status.durationMillis;
-          if (Number.isFinite(dur) && dur > 0) {
-            setDurationMs(dur);
-          }
-          if (status.didJustFinish) {
-            setIsPlaying(false);
-            setPositionMs(0);
-          }
-        });
+
+    // 使用HTMLAudioElement加载音频
+    const audio = new Audio(message.audioUri);
+    audio.addEventListener('loadedmetadata', () => {
+      if (!cancelled) {
+        setDurationMs(audio.duration * 1000);
         setSoundLoaded(true);
-      } catch (err) {
-        console.error('Failed to load audio:', err);
       }
-    };
-    loadSound();
+    });
+    audio.addEventListener('timeupdate', () => {
+      if (!cancelled) {
+        setPositionMs(audio.currentTime * 1000);
+      }
+    });
+    audio.addEventListener('ended', () => {
+      if (!cancelled) {
+        setIsPlaying(false);
+        setPositionMs(0);
+      }
+    });
+    audio.load();
+    soundRef.current = audio;
+
     return () => {
       cancelled = true;
-      soundRef.current?.unloadAsync();
+      soundRef.current?.pause();
       soundRef.current = null;
     };
   }, [message.audioUri]);
@@ -117,13 +110,13 @@ const RecordingDetailScreen = ({route, navigation}: any) => {
   }, [isPlaying]);
 
   const handlePlayPause = useCallback(async () => {
-    const sound = soundRef.current;
-    if (!sound) return;
+    const audio = soundRef.current;
+    if (!audio) return;
     if (isPlaying) {
-      await sound.pauseAsync();
+      audio.pause();
       setIsPlaying(false);
     } else {
-      await sound.playAsync();
+      audio.play();
       setIsPlaying(true);
     }
   }, [isPlaying]);

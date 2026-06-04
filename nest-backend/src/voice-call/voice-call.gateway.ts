@@ -12,8 +12,6 @@ import { Server, Socket } from 'socket.io';
 import { VoiceCallService } from './voice-call.service';
 import WebSocket from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import { execFile } from 'child_process';
-import * as path from 'path';
 
 interface VoiceCallState {
   isInCall: boolean;
@@ -116,11 +114,17 @@ export class VoiceCallGateway implements OnGatewayConnection, OnGatewayDisconnec
     client.emit('ai-thinking');
     client.emit('ai-text-chunk', { text: greeting });
 
-    // 尝试生成 TTS 音频
-    const ok = await this.ttsAndSend(client, state, greeting);
-    if (!ok) {
-      // TTS 失败时回退到文本，让客户端用 Web Speech API 朗读
-      client.emit('ai-speech', { text: greeting });
+    try {
+      // 尝试生成 TTS 音频
+      const ok = await this.ttsAndSend(client, state, greeting);
+      if (!ok) {
+        // TTS 失败时回退到文本，让客户端用 Web Speech API 朗读
+        client.emit('ai-speech', { text: greeting });
+      }
+    } finally {
+      // 重置 AI 说话状态，允许后续用户语音识别和处理正常进行
+      state.isAiSpeaking = false;
+      state.lastInterimText = '';
     }
 
     state.conversationHistory.push({ role: 'assistant', content: greeting });
@@ -400,36 +404,29 @@ export class VoiceCallGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   /**
-   * 调用 edge-tts Python 脚本
+   * 调用 edge-tts — 通过 HTTP 请求本地 /voice-call/tts 端点
+   * 避免子进程调用 Python 的路径和环境问题
    */
-  private callEdgeTTS(text: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const ttsScript = path.join(process.cwd(), 'tts_server.py');
-      const python = process.env.PYTHON || 'python';
-      this.logger.log(`Edge TTS call: text="${text.substring(0, 20)}", script=${ttsScript}`);
-      const child = execFile(python, [ttsScript], {
-        timeout: 30000,
-        maxBuffer: 10 * 1024 * 1024,
-      }, (error, stdout, stderr) => {
-        if (error) {
-          this.logger.error(`Edge TTS exec error: ${error.message}`);
-          if (stderr) this.logger.error(`Edge TTS stderr: ${stderr.substring(0, 300)}`);
-          reject(error);
-          return;
-        }
-        const result = stdout.trim();
-        this.logger.log(`Edge TTS success: ${result.length} chars`);
-        resolve(result);
-      });
+  private async callEdgeTTS(text: string): Promise<string> {
+    const port = process.env.PORT || 3000;
+    const url = `http://127.0.0.1:${port}/voice-call/tts`;
+    this.logger.log(`Edge TTS HTTP call: text="${text.substring(0, 30)}"`);
 
-      if (child.stdin) {
-        child.stdin.write(text);
-        child.stdin.end();
-      } else {
-        this.logger.error('Edge TTS: child.stdin is null');
-        reject(new Error('stdin is null'));
-      }
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voice: '七七' }),
+      signal: AbortSignal.timeout(30000),
     });
+
+    if (!response.ok) {
+      throw new Error(`TTS HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    const audioBase64 = result.data?.audio || result.audio || '';
+    this.logger.log(`Edge TTS success: ${audioBase64.length} chars`);
+    return audioBase64;
   }
 
   /**

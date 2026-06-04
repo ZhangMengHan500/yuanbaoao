@@ -5,12 +5,11 @@
 
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, Platform, Animated, Easing} from 'react-native';
-import {Audio} from 'expo-av';
 import {Message} from '../types';
 import {COLORS} from '../constants';
 
-// 全局单例：同时只播放一个录音
-let currentSound: Audio.Sound | null = null;
+// Web环境音频播放
+let currentWebAudio: HTMLAudioElement | null = null;
 let currentCardId: string | null = null;
 
 interface RecordingCardProps {
@@ -25,7 +24,7 @@ const RecordingCard = ({message, navigation}: RecordingCardProps) => {
   const [positionMs, setPositionMs] = useState(0);
   const [durationMs, setDurationMs] = useState((message.audioDuration || 0) * 1000);
   const [soundLoaded, setSoundLoaded] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const webAudioRef = useRef<HTMLAudioElement | null>(null);
   const waveAnim = useRef(new Animated.Value(0)).current;
   const waveAnimLoop = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -38,44 +37,37 @@ const RecordingCard = ({message, navigation}: RecordingCardProps) => {
     return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // 加载音频
+  // 加载音频 - Web环境使用HTMLAudioElement
   useEffect(() => {
     if (!message.audioUri) return;
     let cancelled = false;
-    const loadSound = async () => {
-      try {
-        const {sound} = await Audio.Sound.createAsync(
-          {uri: message.audioUri},
-          {shouldPlay: false},
-        );
-        if (cancelled) {
-          sound.unloadAsync();
-          return;
-        }
-        soundRef.current = sound;
-        sound.setOnPlaybackStatusUpdate(status => {
-          if (!status.isLoaded) return;
-          if (cancelled) return;
-          setPositionMs(status.positionMillis || 0);
-          const dur = status.durationMillis;
-          if (Number.isFinite(dur) && dur > 0) {
-            setDurationMs(dur);
-          }
-          if (status.didJustFinish) {
-            setIsPlaying(false);
-            setPositionMs(0);
-          }
-        });
+
+    // Web环境：使用HTMLAudioElement
+    const audio = new Audio(message.audioUri);
+    audio.addEventListener('loadedmetadata', () => {
+      if (!cancelled) {
+        setDurationMs(audio.duration * 1000);
         setSoundLoaded(true);
-      } catch (err) {
-        console.error('Failed to load audio:', err);
       }
-    };
-    loadSound();
+    });
+    audio.addEventListener('timeupdate', () => {
+      if (!cancelled) {
+        setPositionMs(audio.currentTime * 1000);
+      }
+    });
+    audio.addEventListener('ended', () => {
+      if (!cancelled) {
+        setIsPlaying(false);
+        setPositionMs(0);
+      }
+    });
+    audio.load();
+    webAudioRef.current = audio;
+
     return () => {
       cancelled = true;
-      soundRef.current?.unloadAsync();
-      soundRef.current = null;
+      webAudioRef.current?.pause();
+      webAudioRef.current = null;
     };
   }, [message.audioUri]);
 
@@ -97,25 +89,25 @@ const RecordingCard = ({message, navigation}: RecordingCardProps) => {
   }, [isPlaying]);
 
   const handlePlayPause = useCallback(async () => {
-    const sound = soundRef.current;
-    if (!sound) return;
+    const audio = webAudioRef.current;
+    if (!audio) return;
 
     // 如果另一个卡片在播放，先停止
-    if (currentSound && currentCardId !== message.id) {
-      await currentSound.stopAsync();
-      await currentSound.setPositionAsync(0);
-      currentSound = null;
+    if (currentWebAudio && currentCardId !== message.id) {
+      currentWebAudio.pause();
+      currentWebAudio.currentTime = 0;
+      currentWebAudio = null;
       currentCardId = null;
     }
 
     if (isPlaying) {
-      await sound.pauseAsync();
-      currentSound = null;
+      audio.pause();
+      currentWebAudio = null;
       currentCardId = null;
       setIsPlaying(false);
     } else {
-      await sound.playAsync();
-      currentSound = sound;
+      audio.play();
+      currentWebAudio = audio;
       currentCardId = message.id;
       setIsPlaying(true);
     }

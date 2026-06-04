@@ -159,6 +159,7 @@ export class CreateController {
 
   // POST /create/upload - 上传参考图片
   @Post('upload')
+  @Public()
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -178,6 +179,8 @@ export class CreateController {
     }),
   )
   uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return { url: `/uploads/${file.filename}`, filename: file.filename };
+    // 返回完整的HTTP URL
+    const baseUrl = 'http://localhost:3000';
+    return { url: `${baseUrl}/uploads/${file.filename}`, filename: file.filename };
   }
 }

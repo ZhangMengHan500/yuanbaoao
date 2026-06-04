@@ -110,10 +110,20 @@ const ProfileScreen = ({navigation}: any) => {
   }, [email, password, login]);
 
   const handleLogout = useCallback(() => {
-    Alert.alert('退出登录', '确定要退出吗？', [
-      {text: '取消', style: 'cancel'},
-      {text: '确定退出', style: 'destructive', onPress: () => logout()},
-    ]);
+    console.log('Logout button clicked');
+    // Web环境下使用window.confirm
+    if (typeof window !== 'undefined' && window.confirm) {
+      const confirmed = window.confirm('确定要退出登录吗？');
+      if (confirmed) {
+        logout();
+      }
+    } else {
+      // Native环境下使用Alert
+      Alert.alert('退出登录', '确定要退出吗？', [
+        {text: '取消', style: 'cancel'},
+        {text: '确定退出', style: 'destructive', onPress: () => logout()},
+      ]);
+    }
   }, [logout]);
 
   const getThemeColorValue = useCallback(() => {
@@ -258,6 +268,14 @@ const ProfileScreen = ({navigation}: any) => {
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* 退出登录按钮 */}
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={handleLogout}
+            activeOpacity={0.7}>
+            <Text style={styles.logoutBtnText}>退出登录</Text>
+          </TouchableOpacity>
 
           <View style={{height: 80}} />
         </ScrollView>
@@ -751,6 +769,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.text.lightFaint,
     marginTop: 24,
+  },
+
+  // 退出登录按钮
+  logoutBtn: {
+    marginTop: 20,
+    marginHorizontal: 16,
+    backgroundColor: COLORS.light.surface,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  logoutBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
   },
 });
 

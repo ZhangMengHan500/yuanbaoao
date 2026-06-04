@@ -6,9 +6,18 @@
     "slug": "yuanbao-ai",
     "version": "1.0.0",
     "platforms": ["ios", "android", "web"],
+    "android": {
+      "package": "com.yuanbaoai.app"
+    },
     "web": {
       "bundler": "metro",
       "title": "元宝AI"
+    },
+    "owner": "zhangmh",
+    "extra": {
+      "eas": {
+        "projectId": "e8b31b4a-a04c-499f-8176-ce43b3c6b152"
+      }
     }
   }
 }

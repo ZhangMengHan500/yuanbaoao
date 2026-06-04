@@ -39,12 +39,15 @@ export class DocReaderController {
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadDocDto,
   ) {
-    return this.docService.uploadDocument(userId, file, dto.title);
+    // 处理未登录用户
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.docService.uploadDocument(effectiveUserId, file, dto.title);
   }
 
   @Get('documents')
   async getDocuments(@CurrentUser('id') userId: string) {
-    return this.docService.getDocuments(userId);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.docService.getDocuments(effectiveUserId);
   }
 
   @Get('documents/:id')
@@ -52,7 +55,8 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.docService.getDocumentById(id, userId);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.docService.getDocumentById(id, effectiveUserId);
   }
 
   @Get('documents/:id/status')
@@ -60,7 +64,8 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.docService.getDocumentStatus(id, userId);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.docService.getDocumentStatus(id, effectiveUserId);
   }
 
   @Get('documents/:id/content')
@@ -70,7 +75,8 @@ export class DocReaderController {
     @Query('page') page: number = 1,
     @Query('pageSize') pageSize: number = 20,
   ) {
-    return this.docService.getDocumentContent(id, userId, page, pageSize);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.docService.getDocumentContent(id, effectiveUserId, page, pageSize);
   }
 
   @Get('documents/:id/summary')
@@ -78,7 +84,8 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    await this.docService.getDocumentById(id, userId);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    await this.docService.getDocumentById(id, effectiveUserId);
     return this.summaryService.getSummaries(id);
   }
 
@@ -87,7 +94,8 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.docService.deleteDocument(id, userId);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.docService.deleteDocument(id, effectiveUserId);
   }
 
   @Get('chunks/:id')
@@ -100,7 +108,8 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Body('documentId') documentId: string,
   ) {
-    return this.qaService.createConversation(documentId, userId);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.qaService.createConversation(documentId, effectiveUserId);
   }
 
   @Get('conversations')
@@ -108,7 +117,8 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Query('documentId') documentId: string,
   ) {
-    return this.qaService.getConversations(documentId, userId);
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
+    return this.qaService.getConversations(documentId, effectiveUserId);
   }
 
   @Get('conversations/:id/messages')
@@ -123,12 +133,13 @@ export class DocReaderController {
     @Body() dto: QARequestDto,
     @Res() res: Response,
   ) {
+    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
     try {
-      for await (const event of this.qaService.streamChat(id, userId, dto.message)) {
+      for await (const event of this.qaService.streamChat(id, effectiveUserId, dto.message)) {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
       res.end();

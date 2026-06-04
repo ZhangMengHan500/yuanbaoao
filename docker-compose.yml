@@ -1,0 +1,111 @@
+services:
+  # ===== 主服务 =====
+  app:
+    build:
+      context: ./nest-backend
+      dockerfile: Dockerfile
+    container_name: yuanbao-app
+    restart: unless-stopped
+    env_file: .env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - yuanbao-net
+
+  # ===== OCR 微服务 =====
+  ocr:
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    container_name: yuanbao-ocr
+    restart: unless-stopped
+    networks:
+      - yuanbao-net
+
+  # ===== SD 推理微服务 =====
+  sd:
+    build:
+      context: ./python-service
+      dockerfile: Dockerfile
+    container_name: yuanbao-sd
+    restart: unless-stopped
+    environment:
+      - NESTJS_CALLBACK_URL=http://app:3000
+    volumes:
+      - sd_outputs:/app/outputs
+    networks:
+      - yuanbao-net
+
+  # ===== PostgreSQL =====
+  postgres:
+    image: postgres:15-alpine
+    container_name: yuanbao-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '123456'
+      POSTGRES_DB: yuanbao_ai
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - yuanbao-net
+
+  # ===== Redis =====
+  redis:
+    image: redis:7-alpine
+    container_name: yuanbao-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - yuanbao-net
+
+  # ===== ChromaDB 向量数据库 =====
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: yuanbao-chromadb
+    restart: unless-stopped
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - yuanbao-net
+
+  # ===== Nginx 反向代理 =====
+  nginx:
+    image: nginx:alpine
+    container_name: yuanbao-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - yuanbao-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  chroma_data:
+  uploads_data:
+  sd_outputs:
+
+networks:
+  yuanbao-net:
+    driver: bridge

@@ -169,44 +169,48 @@ const ChatScreen = ({route, navigation}: any) => {
 
   // 朗读文本 - 使用 Web Speech API
   const speakText = useCallback(async (text: string) => {
-    if (!text || !autoRead) return;
+    console.log('speakText called, autoRead:', autoRead, 'text length:', text?.length);
+    if (!text || !autoRead) {
+      console.log('speakText skipped: no text or autoRead is false');
+      return;
+    }
 
     try {
       setIsReading(true);
 
-      // 使用浏览器内置的 Web Speech API
+      // 使用Web Speech API
       if (typeof window !== 'undefined' && window.speechSynthesis) {
-        // 停止之前的朗读
+        console.log('Using Web Speech API');
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-CN'; // 中文
-        utterance.rate = 1.0; // 语速
-        utterance.pitch = 1.0; // 音调
+        utterance.lang = 'zh-CN';
+        utterance.rate = 1.2; // 加快语速，减少延迟
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
 
-        // 尝试根据用户选择的音色设置声音
-        const voiceName = mmkvStorage.getVoiceName();
+        // 设置语音
         const voices = window.speechSynthesis.getVoices();
-        const chineseVoice = voices.find(v =>
-          v.lang.startsWith('zh') && v.name.includes(voiceName === '甜甜' ? 'Female' : voiceName === '酷酷' ? 'Male' : 'Xiaoxiao')
-        ) || voices.find(v => v.lang.startsWith('zh'));
-
+        const chineseVoice = voices.find(v => v.lang.startsWith('zh')) || voices[0];
         if (chineseVoice) {
           utterance.voice = chineseVoice;
+          console.log('Using voice:', chineseVoice.name);
         }
 
         utterance.onend = () => {
+          console.log('Speech finished');
           setIsReading(false);
         };
 
-        utterance.onerror = (event) => {
-          console.error('Speech synthesis error:', event);
+        utterance.onerror = (e) => {
+          console.error('Speech error:', e);
           setIsReading(false);
         };
 
         window.speechSynthesis.speak(utterance);
+        console.log('Speech started');
       } else {
-        console.log('Web Speech API not supported');
+        console.log('Web Speech API not available');
         setIsReading(false);
       }
     } catch (err) {
@@ -398,10 +402,12 @@ const ChatScreen = ({route, navigation}: any) => {
           loadSessions();
 
           // AI回复完成后自动朗读
+          console.log('Stream completed, autoRead:', autoRead);
           if (autoRead) {
             // 获取最新的助手消息内容
             const currentMessages = useChatStore.getState().messages[sid] || [];
             const lastAssistantMsg = [...currentMessages].reverse().find(m => m.role === 'assistant');
+            console.log('Last assistant message:', lastAssistantMsg?.content?.substring(0, 50));
             if (lastAssistantMsg?.content) {
               // 清理Markdown格式，只保留文本
               const plainText = lastAssistantMsg.content
@@ -412,6 +418,7 @@ const ChatScreen = ({route, navigation}: any) => {
                 .replace(/```[\s\S]*?```/g, '')
                 .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
                 .trim();
+              console.log('Plain text for TTS:', plainText?.substring(0, 50));
               if (plainText) {
                 speakText(plainText);
               }

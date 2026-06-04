@@ -60,7 +60,8 @@
       "Bash(rm -rf .expo)",
       "Bash(awk '{print $5}')",
       "Bash(curl -s http://localhost:3000/knowledge)",
-      "Bash(java -version)"
+      "Bash(java -version)",
+      "PowerShell(Stop-Process -Id 52668 -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }
