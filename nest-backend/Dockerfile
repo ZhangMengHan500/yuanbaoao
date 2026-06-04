@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y \
 COPY package.json pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
+# 配置 sharp 使用国内镜像
+ENV npm_config_sharp_binary_host=https://npmmirror.com/mirrors/sharp
+ENV npm_config_sharp_libvips_binary_host=https://npmmirror.com/mirrors/sharp-libvips
+
 # 安装依赖
 RUN npm install --legacy-peer-deps
 
