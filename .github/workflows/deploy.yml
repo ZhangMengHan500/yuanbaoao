@@ -27,6 +27,7 @@ jobs:
         working-directory: ./rn-app
         run: |
           npm install
+          chmod +x node_modules/.bin/expo
           npx expo export --platform web
 
       - name: Login to Docker Hub
