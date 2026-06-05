@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.js": "/static/js/main.03fca14f.js",
+    "static/js/300.cdd6bef9.js": "/static/js/300.cdd6bef9.js",
+    "static/media/axios.cjs": "/static/media/axios.d94d31fb96e51b2dbcab.cjs",
+    "index.html": "/index.html",
+    "manifest.json": "/manifest.json",
+    "static/media/index.cjs": "/static/media/index.f6d03137e8c9dd0de04c.cjs",
+    "serve.json": "/serve.json",
+    "main.03fca14f.js.map": "/static/js/main.03fca14f.js.map",
+    "300.cdd6bef9.js.map": "/static/js/300.cdd6bef9.js.map"
+  },
+  "entrypoints": [
+    "static/js/300.cdd6bef9.js",
+    "static/js/main.03fca14f.js"
+  ]
+}

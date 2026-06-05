@@ -38,7 +38,12 @@ export const useAuthStore = create<AuthState>(set => ({
   register: async (email, username, password) => {
     set({isLoading: true});
     try {
-      const res: any = await authAPI.register({email, username, password, confirmPassword: password});
+      // 如果 username 为空或 undefined，不传给后端（后端会自动从邮箱前缀生成）
+      const payload: any = {email, password, confirmPassword: password};
+      if (username && username.trim()) {
+        payload.username = username.trim();
+      }
+      const res: any = await authAPI.register(payload);
       const {token, user} = res.data;
       mmkvStorage.setToken(token);
       mmkvStorage.setUser(user);

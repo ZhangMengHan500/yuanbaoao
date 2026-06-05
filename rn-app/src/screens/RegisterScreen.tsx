@@ -113,8 +113,9 @@ const RegisterScreen = ({navigation}: any) => {
 
     setIsSubmitting(true);
     try {
-      // 后端会自动从邮箱前缀生成用户名
-      await register(email.trim(), '', password);
+      // 不传 username，后端会自动从邮箱前缀生成用户名
+      // 注意：不能传空字符串 ''，因为后端 @MinLength(2) 会拒绝
+      await register(email.trim(), undefined as any, password);
       // 注册成功，回到个人中心（已自动登录）
       navigation.goBack();
     } catch (err: any) {

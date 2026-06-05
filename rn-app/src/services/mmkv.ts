@@ -18,6 +18,7 @@ export const mmkvStorage = {
   },
   setUser: (user: any) =>
     storage.set(STORAGE_KEYS.USER, JSON.stringify(user)),
+  removeUser: () => storage.delete(STORAGE_KEYS.USER),
 
   // 聊天历史（按会话ID存储）
   getChatHistory: (sessionId: string) => {

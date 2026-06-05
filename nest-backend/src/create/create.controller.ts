@@ -64,9 +64,10 @@ class CosDto {
 
 // 创作控制器 - AI 图片生成相关端点
 @Controller('create')
-@UseGuards(JwtAuthGuard)
 export class CreateController {
   constructor(private readonly createService: CreateService) {}
+
+  // ====== 公开接口（无需登录即可浏览模板） ======
 
   // GET /create/templates - 获取模板列表（支持分类过滤 + 分页）
   @Get('templates')
@@ -100,43 +101,51 @@ export class CreateController {
     return this.createService.getStyleTemplates(categoryId);
   }
 
-  // POST /create/ai-gen - AI 生图
-  @Post('ai-gen')
-  createAiGen(@Body() dto: AiGenDto, @CurrentUser('id') userId: string) {
-    return this.createService.createAiGenJob(userId, dto);
-  }
-
-  // POST /create/ai-edit - 智能 P 图
-  @Post('ai-edit')
-  createAiEdit(@Body() dto: AiEditDto, @CurrentUser('id') userId: string) {
-    return this.createService.createEditJob(userId, dto);
-  }
-
-  // POST /create/cos - 王者 COS
-  @Post('cos')
-  createCos(@Body() dto: CosDto, @CurrentUser('id') userId: string) {
-    return this.createService.createCosJob(userId, dto);
-  }
-
   // GET /create/cos/heroes - 获取英雄列表（从数据库）
   @Get('cos/heroes')
   getCosHeroes() {
     return this.createService.getCosHeroes();
   }
 
+  // ====== 需要登录的接口 ======
+
+  // POST /create/ai-gen - AI 生图
+  @UseGuards(JwtAuthGuard)
+  @Post('ai-gen')
+  createAiGen(@Body() dto: AiGenDto, @CurrentUser('id') userId: string) {
+    return this.createService.createAiGenJob(userId, dto);
+  }
+
+  // POST /create/ai-edit - 智能 P 图
+  @UseGuards(JwtAuthGuard)
+  @Post('ai-edit')
+  createAiEdit(@Body() dto: AiEditDto, @CurrentUser('id') userId: string) {
+    return this.createService.createEditJob(userId, dto);
+  }
+
+  // POST /create/cos - 王者 COS
+  @UseGuards(JwtAuthGuard)
+  @Post('cos')
+  createCos(@Body() dto: CosDto, @CurrentUser('id') userId: string) {
+    return this.createService.createCosJob(userId, dto);
+  }
+
   // POST /create/cos/seed - 初始化英雄数据 + 生成预览图
+  @UseGuards(JwtAuthGuard)
   @Post('cos/seed')
   seedCosHeroes() {
     return this.createService.seedCosHeroes();
   }
 
   // GET /create/jobs/:id - 查询任务状态
+  @UseGuards(JwtAuthGuard)
   @Get('jobs/:id')
   getJobStatus(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.createService.getJobStatus(id, userId);
   }
 
   // GET /create/jobs - 获取用户任务历史
+  @UseGuards(JwtAuthGuard)
   @Get('jobs')
   getUserJobs(
     @CurrentUser('id') userId: string,
@@ -150,6 +159,7 @@ export class CreateController {
   }
 
   // POST /create/upload - 上传参考图片
+  @UseGuards(JwtAuthGuard)
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {

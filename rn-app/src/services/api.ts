@@ -27,14 +27,10 @@ api.interceptors.response.use(
   response => response.data,
   error => {
     console.error('API Error:', error?.response?.data || error.message);
-    // 401 未授权：清除失效 token，跳转登录页
+    // 401 未授权：清除失效 token（不强制刷新页面，避免破坏用户体验）
     if (error?.response?.status === 401) {
       mmkvStorage.removeToken();
       mmkvStorage.removeUser();
-      // Web 环境下刷新页面回到未登录状态
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
     }
     return Promise.reject(error);
   },
