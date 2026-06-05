@@ -35,7 +35,7 @@ export class SmartEditService {
   }
 
   async submitJob(
-    userId: string | undefined,
+    userId: string,
     params: {
       imageBuffer?: Buffer;
       imageUrl?: string;

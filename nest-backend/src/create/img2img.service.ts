@@ -36,7 +36,7 @@ export class Img2ImgService {
 
   // 提交图生图任务
   async submitJob(
-    userId: string | undefined,
+    userId: string,
     params: {
       imageBuffer?: Buffer;
       imageUrl?: string;
@@ -218,7 +218,7 @@ export class Img2ImgService {
   }
 
   // 查询任务状态
-  async getJobStatus(jobId: string, userId: string | undefined) {
+  async getJobStatus(jobId: string, userId: string) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
     return this.prisma.imageJob.findFirst({
       where: { id: jobId, userId: userId },

@@ -32,8 +32,8 @@ export class Img2ImgController {
   }))
   async submitJob(
     @Req() req: Request,
+    @CurrentUser('id') userId: string,
     @UploadedFile() file?: Express.Multer.File,
-    @CurrentUser('id') userId?: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
     // 从 multer 解析的 body 中读取字段
@@ -92,7 +92,7 @@ export class Img2ImgController {
   @Get('job/:jobId')
   async getJobStatus(
     @Param('jobId') jobId: string,
-    @CurrentUser('id') userId?: string,
+    @CurrentUser('id') userId: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
     return this.img2imgService.getJobStatus(jobId, userId);

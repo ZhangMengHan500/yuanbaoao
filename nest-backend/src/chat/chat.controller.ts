@@ -78,7 +78,7 @@ export class ChatController {
   async streamChat(
     @Body() dto: ChatStreamDto,
     @Res() res: Response,
-    @CurrentUser('id') userId?: string,
+    @CurrentUser('id') userId: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
     // 设置 SSE 响应头
@@ -152,7 +152,7 @@ export class ChatController {
   async photoSolve(
     @Body() dto: PhotoSolveDto,
     @Res() res: Response,
-    @CurrentUser('id') userId?: string,
+    @CurrentUser('id') userId: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
     res.setHeader('Content-Type', 'text/event-stream');

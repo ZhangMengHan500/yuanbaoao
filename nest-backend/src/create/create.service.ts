@@ -78,7 +78,7 @@ export class CreateService {
 
   // 创建 AI 生图任务
   async createAiGenJob(
-    userId: string | undefined,
+    userId: string,
     dto: {
       templateId?: string;
       userDescription: string;
@@ -127,7 +127,7 @@ export class CreateService {
 
   // 创建智能 P 图任务
   async createEditJob(
-    userId: string | undefined,
+    userId: string,
     dto: { editInstruction: string; referenceImageUrl: string },
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
@@ -157,7 +157,7 @@ export class CreateService {
 
   // 创建王者 COS 任务
   async createCosJob(
-    userId: string | undefined,
+    userId: string,
     dto: { characterName: string; referenceImageUrl: string },
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
@@ -276,7 +276,7 @@ export class CreateService {
   }
 
   // 查询任务状态
-  async getJobStatus(jobId: string, userId: string | undefined) {
+  async getJobStatus(jobId: string, userId: string) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
     const job = await this.prisma.imageJob.findFirst({
       where: { id: jobId, userId: userId },
@@ -286,7 +286,7 @@ export class CreateService {
   }
 
   // 获取用户的任务历史
-  async getUserJobs(userId: string | undefined, params: { page?: number; pageSize?: number }) {
+  async getUserJobs(userId: string, params: { page?: number; pageSize?: number }) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
     const { page = 1, pageSize = 20 } = params;
     const [items, total] = await Promise.all([
