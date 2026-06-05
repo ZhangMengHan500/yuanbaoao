@@ -19,5 +19,9 @@ module.exports = async function (env, argv) {
     '@': path.resolve(__dirname, 'src'),
   };
 
+  // Output to dist/ instead of web-build/
+  config.output.path = path.resolve(__dirname, 'dist');
+  config.output.publicPath = '/';
+
   return config;
 };
