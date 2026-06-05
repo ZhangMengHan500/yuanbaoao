@@ -50,8 +50,11 @@ jobs:
             # 拉取最新后端镜像
             docker compose pull
 
+            # 重新构建后端镜像
+            docker compose build app
+
             # 重启所有服务
-            docker compose up -d --remove-orphans --force-recreate nginx
+            docker compose up -d --remove-orphans --force-recreate app nginx
 
             # 等待数据库就绪
             sleep 5
