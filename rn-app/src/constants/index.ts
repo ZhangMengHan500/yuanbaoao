@@ -1,5 +1,8 @@
-// API 基础地址
-export const API_BASE_URL = 'http://localhost:3000';
+// API 基础地址：Web 环境下自动使用当前域名，Native 环境使用 localhost
+export const API_BASE_URL =
+  typeof window !== 'undefined' && window.location?.hostname
+    ? `${window.location.protocol}//${window.location.host}`
+    : 'http://localhost:3000';
 
 // 将相对路径图片 URL 转为完整 URL（移动端需要完整地址）
 export const resolveImageUrl = (url: string | null | undefined): string => {
