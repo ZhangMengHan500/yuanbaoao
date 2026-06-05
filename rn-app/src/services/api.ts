@@ -1,4 +1,7 @@
-import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
+import * as axiosModule from 'axios';
+import {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
+
+const axios = axiosModule.default || axiosModule;
 import {API_BASE_URL} from '../constants';
 import {mmkvStorage} from './mmkv';
 import {TemplatePaginatedResponse, ImageJob, StyleCategory, AiStyleTemplate} from '../types';
@@ -27,10 +30,17 @@ api.interceptors.response.use(
   response => response.data,
   error => {
     console.error('API Error:', error?.response?.data || error.message);
-    // 401 未授权：清除失效 token（不强制刷新页面，避免破坏用户体验）
+    // 401 未授权：清除失效 token 并同步 Zustand 状态
     if (error?.response?.status === 401) {
       mmkvStorage.removeToken();
       mmkvStorage.removeUser();
+      // 同步更新 Zustand 状态，使 UI 响应登录状态变化
+      try {
+        const {useAuthStore} = require('../stores/authStore');
+        useAuthStore.getState().logout();
+      } catch (_) {
+        // 静默忽略：如果 store 加载失败，至少 token 已清除
+      }
     }
     return Promise.reject(error);
   },
