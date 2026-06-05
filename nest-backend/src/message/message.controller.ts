@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { IsString, IsNotEmpty } from 'class-validator';
 
 // 创建消息 DTO
@@ -30,7 +29,6 @@ class CreateMessageDto {
 // 消息控制器 - 处理消息的查询和保存请求
 @Controller('messages')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 

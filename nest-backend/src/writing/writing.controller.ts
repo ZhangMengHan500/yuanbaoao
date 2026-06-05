@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Post,
   Body,
@@ -9,7 +9,6 @@ import {
 import { Response } from 'express';
 import { WritingService } from './writing.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { IsString, IsNotEmpty, IsObject } from 'class-validator';
 
 class WritingGenerateDto {
@@ -28,7 +27,6 @@ class WritingGenerateDto {
 
 @Controller('writing')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class WritingController {
   constructor(private readonly writingService: WritingService) {}
 

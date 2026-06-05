@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
@@ -42,7 +41,6 @@ class GenerateVideoDto {
 
 @Controller('video')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class VideoController {
   constructor(private readonly videoService: VideoService) {}
 
@@ -54,9 +52,7 @@ export class VideoController {
     @CurrentUser() user: any,
     @Body() dto: GenerateVideoDto,
   ) {
-    // 处理未登录用户
-    const userId = user?.id || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.videoService.createJob(userId, {
+    return this.videoService.createJob(user.id, {
       prompt: dto.prompt,
       inputImageUrl: dto.inputImageUrl,
       resolution: dto.resolution,
@@ -86,8 +82,6 @@ export class VideoController {
   ) {
     const p = page ? parseInt(page, 10) : 1;
     const ps = pageSize ? parseInt(pageSize, 10) : 20;
-    // 处理未登录用户
-    const userId = user?.id || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.videoService.getUserJobs(userId, p, ps);
+    return this.videoService.getUserJobs(user.id, p, ps);
   }
 }

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -12,8 +12,6 @@ import {
 import { PersonaService } from './persona.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
-import { Public } from '../common/decorators/public.decorator';
-
 // 创建角色人设 DTO
 class CreatePersonaDto {
   @IsString()
@@ -63,19 +61,16 @@ class UpdatePersonaDto {
 // 角色人设控制器 - 管理角色人设的增删查改请求
 @Controller('personas')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class PersonaController {
   constructor(private readonly personaService: PersonaService) {}
 
   // 获取所有角色人设
-  @Public()
   @Get()
   async getPersonas() {
     return this.personaService.getPersonas();
   }
 
   // 获取单个角色人设
-  @Public()
   @Get(':id')
   async getPersona(@Param('id', ParseUUIDPipe) id: string) {
     return this.personaService.getPersonaById(id);

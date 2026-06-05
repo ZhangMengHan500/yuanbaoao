@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, Inject } from '@nestjs/common';
+﻿import { Injectable, Logger, NotFoundException, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PromptService } from '../llm/prompt.service';
 import { IImageGenProvider } from './image-gen.provider';
@@ -48,7 +48,6 @@ export class Img2ImgService {
     },
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     const jobId = uuid();
 
     // 获取图片 Buffer：优先使用上传的文件，否则从 URL / data URI 解析
@@ -104,7 +103,7 @@ export class Img2ImgService {
     await this.prisma.imageJob.create({
       data: {
         id: jobId,
-        userId: effectiveUserId,
+        userId: userId,
         templateId: params.templateId,
         jobType: 'img2img',
         status: 'processing',
@@ -221,9 +220,8 @@ export class Img2ImgService {
   // 查询任务状态
   async getJobStatus(jobId: string, userId: string | undefined) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     return this.prisma.imageJob.findFirst({
-      where: { id: jobId, userId: effectiveUserId },
+      where: { id: jobId, userId: userId },
     });
   }
 }

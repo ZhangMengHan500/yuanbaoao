@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Post,
   Delete,
@@ -16,7 +16,6 @@ import { readFileSync } from 'fs';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Public } from '../common/decorators/public.decorator';
 import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 // 聊天请求 DTO
@@ -68,7 +67,6 @@ class PhotoSolveDto {
 // 聊天控制器 - SSE 流式对话端点
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class ChatController {
   constructor(
     private readonly chatService: ChatService,
@@ -83,7 +81,6 @@ export class ChatController {
     @CurrentUser('id') userId?: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     // 设置 SSE 响应头
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -98,12 +95,12 @@ export class ChatController {
       await this.chatService.saveUserMessage(sessionId, content);
 
       // 1.5 自动标题：如果会话标题还是默认的 "New Chat"，用第一条消息生成标题
-      await this.chatService.autoTitleIfNew(sessionId, effectiveUserId, content);
+      await this.chatService.autoTitleIfNew(sessionId, userId, content);
 
       // 2. 构建对话上下文（传入请求中的 personaId，优先使用前端选中的角色）
       const { messages } = await this.chatService.buildChatContext(
         sessionId,
-        effectiveUserId,
+        userId,
         content,
         enableRag,
         personaId,
@@ -158,7 +155,6 @@ export class ChatController {
     @CurrentUser('id') userId?: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -173,12 +169,12 @@ export class ChatController {
       await this.chatService.saveUserMessageWithImage(sessionId, content, imageUrl);
 
       // 2. 自动生成标题
-      await this.chatService.autoTitleIfNew(sessionId, effectiveUserId, '拍题答疑');
+      await this.chatService.autoTitleIfNew(sessionId, userId, '拍题答疑');
 
       // 3. 构建对话上下文（文本历史）
       const context = await this.chatService.buildChatContext(
         sessionId,
-        effectiveUserId,
+        userId,
         content,
         false, // 拍题不需要 RAG
         personaId,

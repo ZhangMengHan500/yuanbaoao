@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -12,7 +12,6 @@ import {
 import { SessionService } from './session.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { IsOptional, IsString } from 'class-validator';
 
 // 创建会话 DTO
@@ -35,38 +34,31 @@ export class UpdatePersonaDto {
 // 会话控制器 - 处理聊天会话的增删查请求
 @Controller('sessions')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
   // 获取当前用户的所有会话（含角色信息）
   @Get()
-  async getSessions(@CurrentUser('id') userId?: string) {
-    // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.sessionService.getSessions(effectiveUserId);
+  async getSessions(@CurrentUser('id') userId: string) {
+    return this.sessionService.getSessions(userId);
   }
 
   // 获取单个会话详情（含消息和角色）
   @Get(':id')
   async getSession(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId?: string,
+    @CurrentUser('id') userId: string,
   ) {
-    // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.sessionService.getSessionById(id, effectiveUserId);
+    return this.sessionService.getSessionById(id, userId);
   }
 
   // 创建新会话
   @Post()
   async createSession(
-    @CurrentUser('id') userId?: string,
+    @CurrentUser('id') userId: string,
     @Body() dto: CreateSessionDto = {},
   ) {
-    // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.sessionService.createSession(effectiveUserId, dto);
+    return this.sessionService.createSession(userId, dto);
   }
 
   // 更新会话绑定的角色（切换角色人设）
@@ -74,21 +66,17 @@ export class SessionController {
   async updateSessionPersona(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePersonaDto,
-    @CurrentUser('id') userId?: string,
+    @CurrentUser('id') userId: string,
   ) {
-    // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.sessionService.updateSessionPersona(id, effectiveUserId, dto.personaId);
+    return this.sessionService.updateSessionPersona(id, userId, dto.personaId);
   }
 
   // 删除会话
   @Delete(':id')
   async deleteSession(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('id') userId?: string,
+    @CurrentUser('id') userId: string,
   ) {
-    // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.sessionService.deleteSession(id, effectiveUserId);
+    return this.sessionService.deleteSession(id, userId);
   }
 }

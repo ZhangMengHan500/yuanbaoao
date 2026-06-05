@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -14,7 +14,6 @@ import { diskStorage } from 'multer';
 import { CreateService } from './create.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Public } from '../common/decorators/public.decorator';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 import { extname } from 'path';
 import { v4 as uuid } from 'uuid';
@@ -66,12 +65,10 @@ class CosDto {
 // 创作控制器 - AI 图片生成相关端点
 @Controller('create')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class CreateController {
   constructor(private readonly createService: CreateService) {}
 
   // GET /create/templates - 获取模板列表（支持分类过滤 + 分页）
-  @Public()
   @Get('templates')
   getTemplates(
     @Query('category') category?: string,
@@ -86,21 +83,18 @@ export class CreateController {
   }
 
   // GET /create/templates/:id - 获取模板详情
-  @Public()
   @Get('templates/:id')
   getTemplate(@Param('id') id: string) {
     return this.createService.getTemplate(id);
   }
 
   // GET /create/style-categories - 获取风格分类（含模板）
-  @Public()
   @Get('style-categories')
   getStyleCategories() {
     return this.createService.getStyleCategories();
   }
 
   // GET /create/style-templates - 获取风格模板列表
-  @Public()
   @Get('style-templates')
   getStyleTemplates(@Query('categoryId') categoryId?: string) {
     return this.createService.getStyleTemplates(categoryId);
@@ -125,14 +119,12 @@ export class CreateController {
   }
 
   // GET /create/cos/heroes - 获取英雄列表（从数据库）
-  @Public()
   @Get('cos/heroes')
   getCosHeroes() {
     return this.createService.getCosHeroes();
   }
 
   // POST /create/cos/seed - 初始化英雄数据 + 生成预览图
-  @Public()
   @Post('cos/seed')
   seedCosHeroes() {
     return this.createService.seedCosHeroes();
@@ -159,7 +151,6 @@ export class CreateController {
 
   // POST /create/upload - 上传参考图片
   @Post('upload')
-  @Public()
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({

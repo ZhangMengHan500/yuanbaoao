@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -14,7 +14,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KnowledgeService } from './knowledge.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 // 添加知识文档 DTO（文本方式）
@@ -39,7 +38,6 @@ class CreateKnowledgeDto {
 // 知识库控制器
 @Controller('knowledge')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class KnowledgeController {
   constructor(private readonly knowledgeService: KnowledgeService) {}
 

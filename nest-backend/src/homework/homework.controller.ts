@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Post,
   Body,
@@ -11,7 +11,6 @@ import { join } from 'path';
 import { readFileSync } from 'fs';
 import { HomeworkService } from './homework.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 class GradeDto {
@@ -26,7 +25,6 @@ class GradeDto {
 
 @Controller('homework')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class HomeworkController {
   constructor(private readonly homeworkService: HomeworkService) {}
 

@@ -31,6 +31,12 @@ export function startSSEStream(
     signal: controller.signal,
   })
     .then(response => {
+      if (response.status === 401) {
+        mmkvStorage.removeToken();
+        mmkvStorage.removeUser();
+        if (typeof window !== 'undefined') window.location.reload();
+        throw new Error('Unauthorized');
+      }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }

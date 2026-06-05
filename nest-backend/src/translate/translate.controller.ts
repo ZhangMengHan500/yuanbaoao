@@ -1,12 +1,10 @@
-import { Controller, Post, Body, Res, UseGuards, HttpCode } from '@nestjs/common';
+﻿import { Controller, Post, Body, Res, UseGuards, HttpCode } from '@nestjs/common';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { TranslateService } from './translate.service';
 
 @Controller('translate')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class TranslateController {
   constructor(private readonly translateService: TranslateService) {}
 

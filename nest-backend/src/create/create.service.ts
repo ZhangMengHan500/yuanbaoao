@@ -1,4 +1,4 @@
-import {
+﻿import {
   Injectable,
   Inject,
   NotFoundException,
@@ -88,7 +88,6 @@ export class CreateService {
     },
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     // 1. 如果有模板，获取模板的 stylePrompt
     let stylePrompt = '';
     if (dto.templateId) {
@@ -109,7 +108,7 @@ export class CreateService {
     // 3. 创建任务记录
     const job = await this.prisma.imageJob.create({
       data: {
-        userId: effectiveUserId,
+        userId: userId,
         templateId: dto.templateId,
         jobType: 'ai_gen',
         status: 'processing',
@@ -132,14 +131,13 @@ export class CreateService {
     dto: { editInstruction: string; referenceImageUrl: string },
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     const finalPrompt = await this.promptService.composeEditPrompt(
       dto.editInstruction,
     );
 
     const job = await this.prisma.imageJob.create({
       data: {
-        userId: effectiveUserId,
+        userId: userId,
         jobType: 'ai_edit',
         status: 'processing',
         prompt: finalPrompt,
@@ -163,7 +161,6 @@ export class CreateService {
     dto: { characterName: string; referenceImageUrl: string },
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     const heroPrompt = getHeroPrompt(dto.characterName);
 
     // 如果有参考图，用人脸融合模式；否则纯文生图
@@ -172,7 +169,7 @@ export class CreateService {
 
     const job = await this.prisma.imageJob.create({
       data: {
-        userId: effectiveUserId,
+        userId: userId,
         jobType: 'cos',
         status: 'processing',
         prompt: finalPrompt,
@@ -281,9 +278,8 @@ export class CreateService {
   // 查询任务状态
   async getJobStatus(jobId: string, userId: string | undefined) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     const job = await this.prisma.imageJob.findFirst({
-      where: { id: jobId, userId: effectiveUserId },
+      where: { id: jobId, userId: userId },
     });
     if (!job) throw new NotFoundException('任务不存在');
     return job;
@@ -292,16 +288,15 @@ export class CreateService {
   // 获取用户的任务历史
   async getUserJobs(userId: string | undefined, params: { page?: number; pageSize?: number }) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     const { page = 1, pageSize = 20 } = params;
     const [items, total] = await Promise.all([
       this.prisma.imageJob.findMany({
-        where: { userId: effectiveUserId },
+        where: { userId: userId },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
-      this.prisma.imageJob.count({ where: { userId: effectiveUserId } }),
+      this.prisma.imageJob.count({ where: { userId: userId } }),
     ]);
     return { items, total, page, pageSize };
   }

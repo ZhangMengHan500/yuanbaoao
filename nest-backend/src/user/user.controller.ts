@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Patch,
@@ -8,7 +8,6 @@ import {
 import { UserService } from './user.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { IsOptional, IsString } from 'class-validator';
 
 // 更新用户 DTO
@@ -25,7 +24,6 @@ class UpdateUserDto {
 // 用户控制器 - 处理用户信息相关请求
 @Controller('user')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

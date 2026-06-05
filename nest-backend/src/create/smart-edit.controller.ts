@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Post,
   Get,
@@ -12,14 +12,12 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Public } from '../common/decorators/public.decorator';
 import { SmartEditService } from './smart-edit.service';
 import { Observable, interval, switchMap, takeWhile } from 'rxjs';
 import { Request } from 'express';
 
 @Controller('create/smart-edit')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class SmartEditController {
   constructor(private readonly smartEditService: SmartEditService) {}
 

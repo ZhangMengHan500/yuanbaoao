@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Post,
   Get,
@@ -13,14 +13,12 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Public } from '../common/decorators/public.decorator';
 import { Img2ImgService } from './img2img.service';
 import { Observable, interval, switchMap, takeWhile } from 'rxjs';
 import { Request } from 'express';
 
 @Controller('create/img2img')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class Img2ImgController {
   constructor(private readonly img2imgService: Img2ImgService) {}
 
@@ -38,7 +36,6 @@ export class Img2ImgController {
     @CurrentUser('id') userId?: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     // 从 multer 解析的 body 中读取字段
     const body = req.body || {};
     const prompt = body.prompt;
@@ -55,7 +52,7 @@ export class Img2ImgController {
       templateId,
     });
 
-    return this.img2imgService.submitJob(effectiveUserId, {
+    return this.img2imgService.submitJob(userId, {
       imageBuffer: file?.buffer,
       imageUrl,
       filename: file?.originalname || 'reference.png',
@@ -98,7 +95,6 @@ export class Img2ImgController {
     @CurrentUser('id') userId?: string,
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.img2imgService.getJobStatus(jobId, effectiveUserId);
+    return this.img2imgService.getJobStatus(jobId, userId);
   }
 }

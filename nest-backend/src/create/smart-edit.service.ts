@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+﻿import { Injectable, Logger, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PromptService } from '../llm/prompt.service';
 import { IImageGenProvider } from './image-gen.provider';
@@ -46,7 +46,6 @@ export class SmartEditService {
     },
   ) {
     // 开发测试：如果未登录，使用数据库中的第一个用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     const jobId = uuid();
 
     let imageBuffer = params.imageBuffer;
@@ -88,7 +87,7 @@ export class SmartEditService {
     await this.prisma.imageJob.create({
       data: {
         id: jobId,
-        userId: effectiveUserId,
+        userId: userId,
         jobType: 'smart-edit',
         status: 'processing',
         prompt: finalPrompt,

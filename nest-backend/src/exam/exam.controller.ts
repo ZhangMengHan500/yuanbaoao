@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller, Post, Body, UploadedFile, UseInterceptors,
   UseGuards, Res, BadRequestException,
 } from '@nestjs/common';
@@ -6,7 +6,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { ExamService } from './exam.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { IsString, IsOptional, IsNumber, IsArray } from 'class-validator';
 
@@ -43,7 +42,6 @@ class GenerateCustomDto {
 
 @Controller('exam')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class ExamController {
   constructor(private examService: ExamService) {}
 

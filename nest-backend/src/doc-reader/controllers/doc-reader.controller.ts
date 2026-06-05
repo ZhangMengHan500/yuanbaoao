@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -20,11 +20,8 @@ import { UploadDocDto } from '../dto/upload-doc.dto';
 import { QARequestDto } from '../dto/qa-request.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { Public } from '../../common/decorators/public.decorator';
-
 @Controller('doc-reader')
 @UseGuards(JwtAuthGuard)
-@Public() // 临时禁用认证，方便开发测试
 export class DocReaderController {
   constructor(
     private docService: DocService,
@@ -40,14 +37,12 @@ export class DocReaderController {
     @Body() dto: UploadDocDto,
   ) {
     // 处理未登录用户
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.docService.uploadDocument(effectiveUserId, file, dto.title);
+    return this.docService.uploadDocument(userId, file, dto.title);
   }
 
   @Get('documents')
   async getDocuments(@CurrentUser('id') userId: string) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.docService.getDocuments(effectiveUserId);
+    return this.docService.getDocuments(userId);
   }
 
   @Get('documents/:id')
@@ -55,8 +50,7 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.docService.getDocumentById(id, effectiveUserId);
+    return this.docService.getDocumentById(id, userId);
   }
 
   @Get('documents/:id/status')
@@ -64,8 +58,7 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.docService.getDocumentStatus(id, effectiveUserId);
+    return this.docService.getDocumentStatus(id, userId);
   }
 
   @Get('documents/:id/content')
@@ -75,8 +68,7 @@ export class DocReaderController {
     @Query('page') page: number = 1,
     @Query('pageSize') pageSize: number = 20,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.docService.getDocumentContent(id, effectiveUserId, page, pageSize);
+    return this.docService.getDocumentContent(id, userId, page, pageSize);
   }
 
   @Get('documents/:id/summary')
@@ -84,8 +76,7 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    await this.docService.getDocumentById(id, effectiveUserId);
+    await this.docService.getDocumentById(id, userId);
     return this.summaryService.getSummaries(id);
   }
 
@@ -94,8 +85,7 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.docService.deleteDocument(id, effectiveUserId);
+    return this.docService.deleteDocument(id, userId);
   }
 
   @Get('chunks/:id')
@@ -108,8 +98,7 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Body('documentId') documentId: string,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.qaService.createConversation(documentId, effectiveUserId);
+    return this.qaService.createConversation(documentId, userId);
   }
 
   @Get('conversations')
@@ -117,8 +106,7 @@ export class DocReaderController {
     @CurrentUser('id') userId: string,
     @Query('documentId') documentId: string,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
-    return this.qaService.getConversations(documentId, effectiveUserId);
+    return this.qaService.getConversations(documentId, userId);
   }
 
   @Get('conversations/:id/messages')
@@ -133,13 +121,12 @@ export class DocReaderController {
     @Body() dto: QARequestDto,
     @Res() res: Response,
   ) {
-    const effectiveUserId = userId || 'a3dfb476-937a-4303-808c-316b512c2514';
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
     try {
-      for await (const event of this.qaService.streamChat(id, effectiveUserId, dto.message)) {
+      for await (const event of this.qaService.streamChat(id, userId, dto.message)) {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
       res.end();
